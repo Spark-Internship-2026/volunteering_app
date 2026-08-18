@@ -1,0 +1,97 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function currentUserDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isStudent() {
+      return currentUserDocExists() && currentUserRole() == "student";
+    }
+
+    function isStaff() {
+      return currentUserDocExists() && currentUserRole() == "staff";
+    }
+
+    function hasOnlyUserFields() {
+      return request.resource.data.keys().hasOnly(["email", "role", "createdAt"]);
+    }
+
+    function hasOnlyOpportunityFields() {
+      return request.resource.data.keys().hasOnly([
+        "title",
+        "description",
+        "location",
+        "createdBy",
+        "createdAt"
+      ]);
+    }
+
+    function hasOnlySignupFields() {
+      return request.resource.data.keys().hasOnly([
+        "studentId",
+        "opportunityId",
+        "createdAt"
+      ]);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+        && hasOnlyUserFields()
+        && request.resource.data.role == "student";
+
+      allow update: if isOwner(userId)
+        && hasOnlyUserFields()
+        && request.resource.data.role == resource.data.role;
+
+      allow delete: if false;
+    }
+
+    match /opportunities/{opportunityId} {
+      allow read: if isSignedIn();
+
+      allow create: if isStaff()
+        && hasOnlyOpportunityFields()
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isStaff()
+        && hasOnlyOpportunityFields();
+
+      allow delete: if isStaff();
+    }
+
+    match /signups/{signupId} {
+      allow create: if isStudent()
+        && hasOnlySignupFields()
+        && request.resource.data.studentId == request.auth.uid;
+
+      allow read: if isSignedIn()
+        && (
+          resource.data.studentId == request.auth.uid
+          || isStaff()
+        );
+
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
