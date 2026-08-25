@@ -27,16 +27,19 @@ async function seedData() {
 
     await Promise.all([
       db.doc("users/alice").set({
+        name: "Alice Student",
         email: "alice@example.com",
         role: "student",
         createdAt: "seed",
       }),
       db.doc("users/bob").set({
+        name: "Bob Student",
         email: "bob@example.com",
         role: "student",
         createdAt: "seed",
       }),
       db.doc("users/staff").set({
+        name: "Staff Member",
         email: "staff@example.com",
         role: "staff",
         createdAt: "seed",
@@ -45,16 +48,24 @@ async function seedData() {
         title: "Food Bank Volunteer",
         description: "Help sort donations",
         location: "Seattle",
+        hours: 2,
+        date: "2026-09-15",
+        wrapUpSummary: "",
+        videoUrl: "",
         createdBy: "staff",
         createdAt: "seed",
       }),
       db.doc("signups/alice-opp-1").set({
         studentId: "alice",
+        studentName: "Alice Student",
+        studentEmail: "alice@example.com",
         opportunityId: "opp-1",
         createdAt: "seed",
       }),
       db.doc("signups/bob-opp-1").set({
         studentId: "bob",
+        studentName: "Bob Student",
+        studentEmail: "bob@example.com",
         opportunityId: "opp-1",
         createdAt: "seed",
       }),
@@ -81,6 +92,32 @@ after(async () => {
 });
 
 describe("users", () => {
+  test("a new user can create their own student profile", async () => {
+    const newStudent = authedDb("new-student");
+
+    await assertSucceeds(
+      newStudent.doc("users/new-student").set({
+        name: "New Student",
+        email: "new-student@example.com",
+        role: "student",
+        createdAt: "test",
+      }),
+    );
+  });
+
+  test("a new user cannot create themselves as staff", async () => {
+    const newStudent = authedDb("new-student");
+
+    await assertFails(
+      newStudent.doc("users/new-student").set({
+        name: "New Student",
+        email: "new-student@example.com",
+        role: "staff",
+        createdAt: "test",
+      }),
+    );
+  });
+
   test("a user can read their own user doc but not another user's doc", async () => {
     const alice = authedDb("alice");
 
@@ -120,6 +157,10 @@ describe("opportunities", () => {
         title: "Student-created event",
         description: "This should be denied",
         location: "Library",
+        hours: 1,
+        date: "2026-09-20",
+        wrapUpSummary: "",
+        videoUrl: "",
         createdBy: "alice",
         createdAt: "test",
       }),
@@ -134,8 +175,41 @@ describe("opportunities", () => {
         title: "Staff-created event",
         description: "This should be allowed",
         location: "Community Center",
+        hours: 3,
+        date: "2026-09-21",
+        wrapUpSummary: "",
+        videoUrl: "",
         createdBy: "staff",
         createdAt: "test",
+      }),
+    );
+  });
+
+  test("staff cannot create an opportunity without hours", async () => {
+    const staff = authedDb("staff");
+
+    await assertFails(
+      staff.doc("opportunities/no-hours").set({
+        title: "Missing hours",
+        description: "This should be denied",
+        location: "Community Center",
+        date: "2026-09-21",
+        wrapUpSummary: "",
+        videoUrl: "",
+        createdBy: "staff",
+        createdAt: "test",
+      }),
+    );
+  });
+
+  test("staff can update wrap-up fields", async () => {
+    const staff = authedDb("staff");
+
+    await assertSucceeds(
+      staff.doc("opportunities/opp-1").update({
+        wrapUpSummary: "Students packed 120 pantry boxes.",
+        videoUrl: "https://example.com/wrap-up",
+        updatedAt: "test",
       }),
     );
   });
@@ -148,6 +222,8 @@ describe("signups", () => {
     await assertSucceeds(
       alice.doc("signups/alice-opp-2").set({
         studentId: "alice",
+        studentName: "Alice Student",
+        studentEmail: "alice@example.com",
         opportunityId: "opp-2",
         createdAt: "test",
       }),
@@ -160,6 +236,8 @@ describe("signups", () => {
     await assertFails(
       alice.doc("signups/bob-opp-2").set({
         studentId: "bob",
+        studentName: "Bob Student",
+        studentEmail: "bob@example.com",
         opportunityId: "opp-2",
         createdAt: "test",
       }),
