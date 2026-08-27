@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Spark Volunteering",
-  description: "Volunteer opportunity signup app",
+  description: "Volunteer event signup app",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

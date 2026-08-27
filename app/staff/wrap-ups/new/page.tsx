@@ -1,10 +1,5 @@
-import { StaffOpportunitiesList } from "@/components/staff-opportunities-list";
-import { StaffGate } from "@/components/staff-gate";
+import { redirect } from "next/navigation";
 
 export default function NewWrapUpPage() {
-  return (
-    <StaffGate>
-      <StaffOpportunitiesList mode="wrapUps" />
-    </StaffGate>
-  );
+  redirect("/staff/notes/new");
 }

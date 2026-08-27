@@ -3,16 +3,21 @@
 import { FirebaseError } from "firebase/app";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { auth, db } from "@/lib/firebase";
+import { StaffOpportunitiesList } from "@/components/staff-opportunities-list";
+import { StudentOpportunitiesList } from "@/components/student-opportunities-list";
 
 type UserProfile = {
   name?: string;
   email?: string;
   role?: "student" | "staff";
+};
+
+type DashboardProps = {
+  initialEventId?: string;
 };
 
 function dashboardErrorMessage(error: unknown) {
@@ -23,7 +28,7 @@ function dashboardErrorMessage(error: unknown) {
   return "Could not load your profile. Please refresh and try again.";
 }
 
-export function Dashboard() {
+export function Dashboard({ initialEventId = "" }: DashboardProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -71,7 +76,7 @@ export function Dashboard() {
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950">
-      <section className="mx-auto w-full max-w-3xl">
+      <section className="mx-auto w-full max-w-4xl">
         <div className="mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium text-blue-700">
@@ -125,18 +130,19 @@ export function Dashboard() {
               </dd>
             </div>
           </dl>
-
-          {role === "staff" ? (
-            <div className="mt-5 border-t border-zinc-200 pt-5">
-              <Link
-                className="inline-flex h-10 items-center rounded-md bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800"
-                href="/staff"
-              >
-                Staff tools
-              </Link>
-            </div>
-          ) : null}
         </div>
+
+        {currentUser && role === "staff" ? (
+          <StaffOpportunitiesList embedded />
+        ) : null}
+
+        {currentUser && role === "student" ? (
+          <StudentOpportunitiesList
+            currentUser={currentUser}
+            initialEventId={initialEventId}
+            profile={profile}
+          />
+        ) : null}
       </section>
     </main>
   );

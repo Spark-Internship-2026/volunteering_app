@@ -3,10 +3,10 @@
 import { FirebaseError } from "firebase/app";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
+import { NavigationLinks } from "@/components/navigation-links";
 import { auth, db } from "@/lib/firebase";
 
 type GateState = "loading" | "allowed" | "denied" | "error";
@@ -61,12 +61,10 @@ export function StaffGate({ children }: { children: ReactNode }) {
           <p className="mt-3 text-sm leading-6 text-zinc-600">
             This page is only available to accounts marked as staff.
           </p>
-          <Link
-            className="mt-5 inline-flex h-10 items-center rounded-md border border-zinc-300 px-4 text-sm font-medium hover:bg-zinc-100"
-            href="/dashboard"
-          >
-            Back to dashboard
-          </Link>
+          <NavigationLinks
+            className="mt-5"
+            items={[{ href: "/dashboard", label: "Dashboard" }]}
+          />
         </section>
       </main>
     );
@@ -78,6 +76,10 @@ export function StaffGate({ children }: { children: ReactNode }) {
         <section className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-red-800">
           <h1 className="text-lg font-semibold">Could not check access</h1>
           <p className="mt-2 text-sm leading-6">{message}</p>
+          <NavigationLinks
+            className="mt-5"
+            items={[{ href: "/dashboard", label: "Dashboard" }]}
+          />
         </section>
       </main>
     );

@@ -1,5 +1,4 @@
-import { OpportunityDetail } from "@/components/opportunity-detail";
-import { StaffGate } from "@/components/staff-gate";
+import { redirect } from "next/navigation";
 
 export default async function StaffOpportunityDetailPage({
   params,
@@ -8,9 +7,5 @@ export default async function StaffOpportunityDetailPage({
 }) {
   const { opportunityId } = await params;
 
-  return (
-    <StaffGate>
-      <OpportunityDetail opportunityId={opportunityId} />
-    </StaffGate>
-  );
+  redirect(`/staff/events/${opportunityId}`);
 }

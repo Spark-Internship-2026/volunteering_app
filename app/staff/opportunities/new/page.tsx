@@ -1,10 +1,5 @@
-import { CreateOpportunityForm } from "@/components/create-opportunity-form";
-import { StaffGate } from "@/components/staff-gate";
+import { redirect } from "next/navigation";
 
 export default function NewOpportunityPage() {
-  return (
-    <StaffGate>
-      <CreateOpportunityForm />
-    </StaffGate>
-  );
+  redirect("/staff/events/new");
 }

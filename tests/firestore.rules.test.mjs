@@ -136,20 +136,26 @@ describe("users", () => {
   });
 });
 
-describe("opportunities", () => {
-  test("authenticated users can read opportunities", async () => {
+describe("events", () => {
+  test("authenticated users can read events", async () => {
     const alice = authedDb("alice");
 
     await assertSucceeds(alice.doc("opportunities/opp-1").get());
   });
 
-  test("unauthenticated users cannot read opportunities", async () => {
+  test("unauthenticated users can open a direct event link", async () => {
     const guest = unauthedDb();
 
-    await assertFails(guest.doc("opportunities/opp-1").get());
+    await assertSucceeds(guest.doc("opportunities/opp-1").get());
   });
 
-  test("a student cannot create an opportunity", async () => {
+  test("unauthenticated users cannot list events", async () => {
+    const guest = unauthedDb();
+
+    await assertFails(guest.collection("opportunities").get());
+  });
+
+  test("a student cannot create an event", async () => {
     const alice = authedDb("alice");
 
     await assertFails(
@@ -167,7 +173,7 @@ describe("opportunities", () => {
     );
   });
 
-  test("staff can create an opportunity", async () => {
+  test("staff can create an event", async () => {
     const staff = authedDb("staff");
 
     await assertSucceeds(
@@ -185,7 +191,7 @@ describe("opportunities", () => {
     );
   });
 
-  test("staff cannot create an opportunity without hours", async () => {
+  test("staff cannot create an event without hours", async () => {
     const staff = authedDb("staff");
 
     await assertFails(
@@ -202,13 +208,28 @@ describe("opportunities", () => {
     );
   });
 
-  test("staff can update wrap-up fields", async () => {
+  test("staff can update notes fields", async () => {
     const staff = authedDb("staff");
 
     await assertSucceeds(
       staff.doc("opportunities/opp-1").update({
         wrapUpSummary: "Students packed 120 pantry boxes.",
-        videoUrl: "https://example.com/wrap-up",
+        videoUrl: "https://example.com/notes",
+        updatedAt: "test",
+      }),
+    );
+  });
+
+  test("staff can update event details", async () => {
+    const staff = authedDb("staff");
+
+    await assertSucceeds(
+      staff.doc("opportunities/opp-1").update({
+        title: "Updated Food Bank Volunteer",
+        description: "Updated description",
+        location: "Updated location",
+        hours: 4,
+        date: "2026-10-01",
         updatedAt: "test",
       }),
     );
@@ -244,6 +265,40 @@ describe("signups", () => {
     );
   });
 
+  test("a guest can create an event signup with email only", async () => {
+    const guest = unauthedDb();
+
+    await assertSucceeds(
+      guest.doc("signups/guest-opp-1").set({
+        studentId: "guest",
+        studentName: "GUEST",
+        studentEmail: "guest@example.com",
+        opportunityId: "opp-1",
+        createdAt: "test",
+      }),
+    );
+  });
+
+  test("a guest cannot create a signup with a custom name", async () => {
+    const guest = unauthedDb();
+
+    await assertFails(
+      guest.doc("signups/guest-opp-1").set({
+        studentId: "guest",
+        studentName: "Fake Name",
+        studentEmail: "guest@example.com",
+        opportunityId: "opp-1",
+        createdAt: "test",
+      }),
+    );
+  });
+
+  test("a guest cannot read signups", async () => {
+    const guest = unauthedDb();
+
+    await assertFails(guest.doc("signups/alice-opp-1").get());
+  });
+
   test("a student can read their own signup but not another student's signup", async () => {
     const alice = authedDb("alice");
 
@@ -258,6 +313,24 @@ describe("signups", () => {
       alice.collection("signups").where("studentId", "==", "alice").get(),
     );
     await assertFails(alice.collection("signups").get());
+  });
+
+  test("a student can delete their own signup", async () => {
+    const alice = authedDb("alice");
+
+    await assertSucceeds(alice.doc("signups/alice-opp-1").delete());
+  });
+
+  test("a student cannot delete another student's signup", async () => {
+    const alice = authedDb("alice");
+
+    await assertFails(alice.doc("signups/bob-opp-1").delete());
+  });
+
+  test("staff cannot delete a student's signup", async () => {
+    const staff = authedDb("staff");
+
+    await assertFails(staff.doc("signups/alice-opp-1").delete());
   });
 
   test("staff can read all signups", async () => {

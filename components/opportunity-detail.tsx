@@ -5,15 +5,15 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
-import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 
+import { NavigationLinks } from "@/components/navigation-links";
 import { OpportunityQrCode } from "@/components/opportunity-qr-code";
 import {
   formatHours,
@@ -39,7 +39,7 @@ function detailErrorMessage(error: unknown) {
     return "Firebase denied this request. Confirm this account has role: staff and the latest rules are published.";
   }
 
-  return "Could not load this opportunity. Please refresh and try again.";
+  return "Could not load this event. Please refresh and try again.";
 }
 
 function saveErrorMessage(error: unknown) {
@@ -47,7 +47,7 @@ function saveErrorMessage(error: unknown) {
     return "Firebase denied this update. Confirm this account has role: staff and the latest rules are published.";
   }
 
-  return "Could not save the wrap-up. Please try again.";
+  return "Could not save the notes. Please try again.";
 }
 
 function isValidOptionalUrl(value: string) {
@@ -83,16 +83,26 @@ function signupFromData(id: string, data: Record<string, unknown>): Signup {
 export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [signups, setSignups] = useState<Signup[]>([]);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editHours, setEditHours] = useState("");
   const [wrapUpSummary, setWrapUpSummary] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [detailsError, setDetailsError] = useState("");
+  const [detailsMessage, setDetailsMessage] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribeSignups: (() => void) | undefined;
 
     async function loadOpportunity() {
       try {
@@ -102,7 +112,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
         if (!opportunitySnapshot.exists()) {
           if (isMounted) {
-            setLoadError("This opportunity does not exist.");
+            setLoadError("This event does not exist.");
           }
           return;
         }
@@ -111,22 +121,44 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
           opportunitySnapshot.id,
           opportunitySnapshot.data(),
         );
-        const signupSnapshot = await getDocs(
+
+        if (!isMounted) {
+          return;
+        }
+
+        setOpportunity(loadedOpportunity);
+        setEditTitle(loadedOpportunity.title);
+        setEditDescription(loadedOpportunity.description);
+        setEditLocation(loadedOpportunity.location);
+        setEditDate(loadedOpportunity.date);
+        setEditHours(
+          loadedOpportunity.hours === null
+            ? ""
+            : String(loadedOpportunity.hours),
+        );
+        setWrapUpSummary(loadedOpportunity.wrapUpSummary);
+        setVideoUrl(loadedOpportunity.videoUrl);
+
+        unsubscribeSignups = onSnapshot(
           query(
             collection(db, "signups"),
             where("opportunityId", "==", opportunityId),
           ),
+          (signupSnapshot) => {
+            if (isMounted) {
+              setSignups(
+                signupSnapshot.docs.map((signupDoc) =>
+                  signupFromData(signupDoc.id, signupDoc.data()),
+                ),
+              );
+            }
+          },
+          (caughtError) => {
+            if (isMounted) {
+              setLoadError(detailErrorMessage(caughtError));
+            }
+          },
         );
-        const loadedSignups = signupSnapshot.docs.map((signupDoc) =>
-          signupFromData(signupDoc.id, signupDoc.data()),
-        );
-
-        if (isMounted) {
-          setOpportunity(loadedOpportunity);
-          setWrapUpSummary(loadedOpportunity.wrapUpSummary);
-          setVideoUrl(loadedOpportunity.videoUrl);
-          setSignups(loadedSignups);
-        }
       } catch (caughtError) {
         if (isMounted) {
           setLoadError(detailErrorMessage(caughtError));
@@ -142,8 +174,81 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
     return () => {
       isMounted = false;
+      unsubscribeSignups?.();
     };
   }, [opportunityId]);
+
+  function handleEditToggle() {
+    if (isEditingDetails && opportunity) {
+      setEditTitle(opportunity.title);
+      setEditDescription(opportunity.description);
+      setEditLocation(opportunity.location);
+      setEditDate(opportunity.date);
+      setEditHours(opportunity.hours === null ? "" : String(opportunity.hours));
+      setDetailsError("");
+      setDetailsMessage("");
+    }
+
+    setIsEditingDetails((currentValue) => !currentValue);
+  }
+
+  async function handleDetailsSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setDetailsError("");
+    setDetailsMessage("");
+
+    const trimmedTitle = editTitle.trim();
+    const trimmedDescription = editDescription.trim();
+    const trimmedLocation = editLocation.trim();
+    const parsedHours = Number(editHours);
+
+    if (!trimmedTitle) {
+      setDetailsError("Enter a title.");
+      return;
+    }
+
+    if (!editDate) {
+      setDetailsError("Choose a date.");
+      return;
+    }
+
+    if (!editHours || Number.isNaN(parsedHours) || parsedHours <= 0) {
+      setDetailsError("Enter the number of service hours.");
+      return;
+    }
+
+    setIsSavingDetails(true);
+
+    try {
+      await updateDoc(doc(db, "opportunities", opportunityId), {
+        title: trimmedTitle,
+        description: trimmedDescription,
+        location: trimmedLocation,
+        date: editDate,
+        hours: parsedHours,
+        updatedAt: serverTimestamp(),
+      });
+
+      setOpportunity((currentOpportunity) =>
+        currentOpportunity
+          ? {
+              ...currentOpportunity,
+              title: trimmedTitle,
+              description: trimmedDescription,
+              location: trimmedLocation,
+              date: editDate,
+              hours: parsedHours,
+            }
+          : currentOpportunity,
+      );
+      setIsEditingDetails(false);
+      setDetailsMessage("Details saved.");
+    } catch (caughtError) {
+      setDetailsError(saveErrorMessage(caughtError));
+    } finally {
+      setIsSavingDetails(false);
+    }
+  }
 
   async function handleWrapUpSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -176,7 +281,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
             }
           : currentOpportunity,
       );
-      setSaveMessage("Wrap-up saved.");
+      setSaveMessage("Notes saved.");
     } catch (caughtError) {
       setSaveError(saveErrorMessage(caughtError));
     } finally {
@@ -187,7 +292,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 text-zinc-950">
-        <p className="text-sm text-zinc-600">Loading opportunity...</p>
+        <p className="text-sm text-zinc-600">Loading event...</p>
       </main>
     );
   }
@@ -196,14 +301,12 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 text-zinc-950">
         <section className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-red-800">
-          <h1 className="text-lg font-semibold">Could not open opportunity</h1>
+          <h1 className="text-lg font-semibold">Could not open event</h1>
           <p className="mt-2 text-sm leading-6">{loadError}</p>
-          <Link
-            className="mt-5 inline-flex h-10 items-center rounded-md border border-red-300 px-4 text-sm font-medium hover:bg-red-100"
-            href="/staff/opportunities"
-          >
-            Back to opportunities
-          </Link>
+          <NavigationLinks
+            className="mt-5"
+            items={[{ href: "/dashboard", label: "Dashboard" }]}
+          />
         </section>
       </main>
     );
@@ -214,58 +317,164 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
       <section className="mx-auto w-full max-w-5xl">
         <div className="mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link
-              className="text-sm font-medium text-blue-700 hover:text-blue-800"
-              href="/staff/opportunities"
-            >
-              Opportunities
-            </Link>
+            <p className="text-sm font-medium text-blue-700">
+              Spark Volunteering
+            </p>
             <h1 className="mt-2 text-2xl font-semibold">
               {opportunity.title}
             </h1>
           </div>
 
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-md bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800"
-            href="/staff/opportunities/new"
-          >
-            Create another
-          </Link>
+          <NavigationLinks
+            items={[
+              { href: "/dashboard", label: "Dashboard" },
+              {
+                href: "/staff/events/new",
+                label: "Create new event",
+                variant: "primary",
+              },
+            ]}
+          />
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
           <div className="space-y-5">
             <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">Details</h2>
-              <dl className="mt-4 grid gap-4 sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs font-medium uppercase text-zinc-500">
-                    Date
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {formatOpportunityDate(opportunity.date)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase text-zinc-500">
-                    Hours
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {formatHours(opportunity.hours)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase text-zinc-500">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Details</h2>
+                <button
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:text-zinc-400"
+                  disabled={isSavingDetails}
+                  onClick={handleEditToggle}
+                  type="button"
+                >
+                  {isEditingDetails ? "Cancel" : "Edit"}
+                </button>
+              </div>
+
+              {isEditingDetails ? (
+                <form className="mt-4 space-y-4" onSubmit={handleDetailsSubmit}>
+                  <label className="block text-sm font-medium">
+                    Title
+                    <input
+                      className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      value={editTitle}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                      required
+                    />
+                  </label>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm font-medium">
+                      Date
+                      <input
+                        className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        type="date"
+                        value={editDate}
+                        onChange={(event) => setEditDate(event.target.value)}
+                        required
+                      />
+                    </label>
+
+                    <label className="block text-sm font-medium">
+                      Hours
+                      <input
+                        className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        min="0.25"
+                        step="0.25"
+                        type="number"
+                        value={editHours}
+                        onChange={(event) => setEditHours(event.target.value)}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block text-sm font-medium">
                     Location
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {opportunity.location || "No location"}
-                  </dd>
-                </div>
-              </dl>
-              {opportunity.description ? (
-                <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
-                  {opportunity.description}
+                    <input
+                      className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      value={editLocation}
+                      onChange={(event) => setEditLocation(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="block text-sm font-medium">
+                    Description
+                    <textarea
+                      className="mt-1 block min-h-28 w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                      value={editDescription}
+                      onChange={(event) =>
+                        setEditDescription(event.target.value)
+                      }
+                    />
+                  </label>
+
+                  {detailsError ? (
+                    <p
+                      className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                      role="alert"
+                    >
+                      {detailsError}
+                    </p>
+                  ) : null}
+
+                  <button
+                    className="inline-flex h-10 items-center justify-center rounded-md bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+                    disabled={isSavingDetails}
+                    type="submit"
+                  >
+                    {isSavingDetails ? "Saving" : "Save details"}
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <dt className="text-xs font-medium uppercase text-zinc-500">
+                        Date
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatOpportunityDate(opportunity.date)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium uppercase text-zinc-500">
+                        Hours
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {formatHours(opportunity.hours)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium uppercase text-zinc-500">
+                        Location
+                      </dt>
+                      <dd className="mt-1 text-sm">
+                        {opportunity.location || "No location"}
+                      </dd>
+                    </div>
+                  </dl>
+                  {opportunity.description ? (
+                    <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
+                      {opportunity.description}
+                    </p>
+                  ) : null}
+                </>
+              )}
+
+              {!isEditingDetails && detailsError ? (
+                <p
+                  className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                  role="alert"
+                >
+                  {detailsError}
+                </p>
+              ) : null}
+
+              {!isEditingDetails && detailsMessage ? (
+                <p className="mt-4 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                  {detailsMessage}
                 </p>
               ) : null}
             </section>
@@ -303,9 +512,9 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
 
             <section
               className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
-              id="wrap-up"
+              id="notes"
             >
-              <h2 className="text-lg font-semibold">Wrap-Up</h2>
+              <h2 className="text-lg font-semibold">Notes</h2>
 
               <form className="mt-4 space-y-4" onSubmit={handleWrapUpSubmit}>
                 <label className="block text-sm font-medium">
@@ -347,7 +556,7 @@ export function OpportunityDetail({ opportunityId }: OpportunityDetailProps) {
                   disabled={isSaving}
                   type="submit"
                 >
-                  {isSaving ? "Saving" : "Save wrap-up"}
+                  {isSaving ? "Saving" : "Save notes"}
                 </button>
               </form>
             </section>

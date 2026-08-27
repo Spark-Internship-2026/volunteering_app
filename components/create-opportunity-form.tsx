@@ -2,10 +2,10 @@
 
 import { FirebaseError } from "firebase/app";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { NavigationLinks } from "@/components/navigation-links";
 import { auth, db } from "@/lib/firebase";
 
 function opportunityErrorMessage(error: unknown) {
@@ -13,7 +13,7 @@ function opportunityErrorMessage(error: unknown) {
     return "Firebase denied this write. Confirm this account has role: staff and the latest rules are published.";
   }
 
-  return "Could not create the opportunity. Please try again.";
+  return "Could not create the event. Please try again.";
 }
 
 export function CreateOpportunityForm() {
@@ -54,7 +54,7 @@ export function CreateOpportunityForm() {
       const user = auth.currentUser;
 
       if (!user) {
-        setError("Log in again before creating an opportunity.");
+        setError("Log in again before creating an event.");
         return;
       }
 
@@ -70,7 +70,7 @@ export function CreateOpportunityForm() {
         createdAt: serverTimestamp(),
       });
 
-      router.push(`/staff/opportunities/${opportunity.id}`);
+      router.push(`/staff/events/${opportunity.id}`);
     } catch (caughtError) {
       setError(opportunityErrorMessage(caughtError));
     } finally {
@@ -80,15 +80,21 @@ export function CreateOpportunityForm() {
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950">
-      <section className="mx-auto w-full max-w-2xl">
-        <div className="mb-6 border-b border-zinc-200 pb-5">
-          <Link
-            className="text-sm font-medium text-blue-700 hover:text-blue-800"
-            href="/staff"
-          >
-            Staff
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold">Create Opportunity</h1>
+      <section className="mx-auto w-full max-w-3xl">
+        <div className="mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-blue-700">
+              Spark Volunteering
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold">Create Event</h1>
+          </div>
+
+          <NavigationLinks
+            items={[
+              { href: "/dashboard", label: "Dashboard" },
+              { href: "/staff/events", label: "Events" },
+            ]}
+          />
         </div>
 
         <form
@@ -165,7 +171,7 @@ export function CreateOpportunityForm() {
             disabled={isSubmitting}
             type="submit"
           >
-            {isSubmitting ? "Creating" : "Create opportunity"}
+            {isSubmitting ? "Creating" : "Create event"}
           </button>
         </form>
       </section>

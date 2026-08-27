@@ -51,7 +51,7 @@ export function OpportunityQrCode({
     };
   }, [opportunityId]);
 
-  const downloadName = `${fileSafeTitle(title) || "opportunity"}-qr.png`;
+  const downloadName = `${fileSafeTitle(title) || "event"}-qr.png`;
 
   return (
     <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">

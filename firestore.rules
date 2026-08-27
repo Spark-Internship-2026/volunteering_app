@@ -85,12 +85,23 @@ service cloud.firestore {
       ]);
     }
 
-    function hasValidSignupFields() {
+    function hasValidStudentSignupFields() {
       return request.resource.data.studentId == request.auth.uid
         && request.resource.data.studentName is string
         && request.resource.data.studentName.size() > 0
         && request.resource.data.studentEmail is string
         && request.resource.data.studentEmail == request.auth.token.email
+        && request.resource.data.opportunityId is string
+        && request.resource.data.opportunityId.size() > 0;
+    }
+
+    function hasValidGuestSignupFields() {
+      return !isSignedIn()
+        && request.resource.data.studentId == "guest"
+        && request.resource.data.studentName == "GUEST"
+        && request.resource.data.studentEmail is string
+        && request.resource.data.studentEmail.size() > 3
+        && request.resource.data.studentEmail.size() <= 320
         && request.resource.data.opportunityId is string
         && request.resource.data.opportunityId.size() > 0;
     }
@@ -110,7 +121,8 @@ service cloud.firestore {
     }
 
     match /opportunities/{opportunityId} {
-      allow read: if isSignedIn();
+      allow get: if true;
+      allow list: if isSignedIn();
 
       allow create: if isStaff()
         && hasOnlyOpportunityFields()
@@ -129,10 +141,12 @@ service cloud.firestore {
     }
 
     match /signups/{signupId} {
-      allow create: if isStudent()
-        && hasOnlySignupFields()
+      allow create: if hasOnlySignupFields()
         && hasRequiredSignupFields()
-        && hasValidSignupFields();
+        && (
+          (isStudent() && hasValidStudentSignupFields())
+          || hasValidGuestSignupFields()
+        );
 
       allow read: if isSignedIn()
         && (
@@ -140,7 +154,10 @@ service cloud.firestore {
           || isStaff()
         );
 
-      allow update, delete: if false;
+      allow update: if false;
+
+      allow delete: if isStudent()
+        && resource.data.studentId == request.auth.uid;
     }
 
     match /{document=**} {
