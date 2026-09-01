@@ -283,6 +283,25 @@ export function StudentOpportunitiesList({
     }
   }
 
+  const signedUpOpportunities = opportunities.filter((opportunity) =>
+    signedUpOpportunityIds.has(opportunity.id),
+  );
+
+  const totalHours = signedUpOpportunities.reduce(
+    (sum, opportunity) => sum + (opportunity.hours ?? 0),
+    0,
+  );
+  const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const opportunityHistory = signedUpOpportunities.filter((opportunity) => {
+  const opportunityDate = new Date(`${opportunity.date}T00:00:00`);
+
+  return (
+    !Number.isNaN(opportunityDate.getTime()) && opportunityDate < today
+  );
+});
+
   const selectedOpportunityIsSignedUp = selectedOpportunity
     ? signedUpOpportunityIds.has(selectedOpportunity.id)
     : false;
@@ -293,7 +312,73 @@ export function StudentOpportunitiesList({
 
   return (
     <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-semibold">Available Events</h2>
+  <h2 className="text-lg font-semibold">Your Volunteering</h2>
+
+  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+      <p className="text-sm font-medium text-blue-700">Total Hours</p>
+      <p className="mt-2 text-3xl font-semibold text-blue-950">
+        {formatHours(totalHours)}
+      </p>
+    </div>
+
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+      <p className="text-sm font-medium text-zinc-600">Events Joined</p>
+      <p className="mt-2 text-3xl font-semibold text-zinc-950">
+        {signedUpOpportunities.length}
+      </p>
+    </div>
+  </div>
+
+  <div className="mt-8">
+  <h2 className="text-lg font-semibold">Opportunity History</h2>
+
+  {opportunityHistory.length === 0 ? (
+    <p className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
+      No past opportunities yet.
+    </p>
+  ) : (
+    <div className="mt-4 space-y-3">
+      {opportunityHistory.map((opportunity) => (
+        <article
+          className="rounded-lg border border-zinc-200 p-4"
+          key={opportunity.id}
+        >
+          <h3 className="font-semibold">{opportunity.title}</h3>
+
+          <div className="mt-2 flex gap-5 text-sm text-zinc-600">
+            <span>{formatOpportunityDate(opportunity.date)}</span>
+            <span>{formatHours(opportunity.hours)}</span>
+          </div>
+
+          {opportunity.wrapUpSummary ? (
+            <div className="mt-4 rounded-md bg-zinc-50 p-3">
+              <p className="text-xs font-medium uppercase text-zinc-500">
+                Event wrap-up
+              </p>
+              <p className="mt-2 text-sm text-zinc-700">
+                {opportunity.wrapUpSummary}
+              </p>
+            </div>
+          ) : null}
+
+          {opportunity.videoUrl ? (
+            <a
+              className="mt-3 inline-block text-sm font-medium text-blue-700 hover:underline"
+              href={opportunity.videoUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Watch wrap-up video
+            </a>
+          ) : null}
+        </article>
+      ))}
+    </div>
+  )}
+</div>
+
+  <h2 className="mt-8 text-lg font-semibold">Available Events</h2>
 
       {error ? (
         <p
