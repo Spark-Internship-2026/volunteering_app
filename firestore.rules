@@ -27,6 +27,10 @@ service cloud.firestore {
       return currentUserDocExists() && currentUserRole() == "staff";
     }
 
+    function canUseSignedInSignup() {
+      return isStudent() || isStaff();
+    }
+
     function hasOnlyUserFields() {
       return request.resource.data.keys().hasOnly(["name", "email", "role", "createdAt"]);
     }
@@ -42,6 +46,7 @@ service cloud.firestore {
         "videoUrl",
         "createdBy",
         "createdAt",
+        "signupClosesAt",
         "updatedAt"
       ]);
     }
@@ -66,13 +71,22 @@ service cloud.firestore {
       ]);
     }
 
+    function hasRequiredNewOpportunityFields() {
+      return hasRequiredOpportunityFields()
+        && request.resource.data.keys().hasAll(["signupClosesAt"]);
+    }
+
     function hasValidOpportunityFields() {
       return request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.hours is number
         && request.resource.data.hours > 0
         && request.resource.data.date is string
-        && request.resource.data.date.size() > 0;
+        && request.resource.data.date.size() > 0
+        && (
+          !request.resource.data.keys().hasAny(["signupClosesAt"])
+          || request.resource.data.signupClosesAt is timestamp
+        );
     }
 
     function hasRequiredSignupFields() {
@@ -85,7 +99,11 @@ service cloud.firestore {
       ]);
     }
 
-    function hasValidStudentSignupFields() {
+    function signupDocumentIdMatchesEmail(signupId) {
+      return signupId == request.resource.data.opportunityId + "_" + request.resource.data.studentEmail;
+    }
+
+    function hasValidSignedInSignupFields() {
       return request.resource.data.studentId == request.auth.uid
         && request.resource.data.studentName is string
         && request.resource.data.studentName.size() > 0
@@ -93,6 +111,26 @@ service cloud.firestore {
         && request.resource.data.studentEmail == request.auth.token.email
         && request.resource.data.opportunityId is string
         && request.resource.data.opportunityId.size() > 0;
+    }
+
+    function signupKeepsSameEmailAndEvent() {
+      return request.resource.data.studentEmail == resource.data.studentEmail
+        && request.resource.data.opportunityId == resource.data.opportunityId;
+    }
+
+    function signupOpportunityPath() {
+      return /databases/$(database)/documents/opportunities/$(request.resource.data.opportunityId);
+    }
+
+    function signupIsOpen() {
+      return exists(signupOpportunityPath())
+        && (
+          !get(signupOpportunityPath()).data.keys().hasAny(["signupClosesAt"])
+          || (
+            get(signupOpportunityPath()).data.signupClosesAt is timestamp
+            && request.time < get(signupOpportunityPath()).data.signupClosesAt
+          )
+        );
     }
 
     function hasValidGuestSignupFields() {
@@ -126,7 +164,7 @@ service cloud.firestore {
 
       allow create: if isStaff()
         && hasOnlyOpportunityFields()
-        && hasRequiredOpportunityFields()
+        && hasRequiredNewOpportunityFields()
         && hasValidOpportunityFields()
         && request.resource.data.createdBy == request.auth.uid;
 
@@ -141,10 +179,22 @@ service cloud.firestore {
     }
 
     match /signups/{signupId} {
-      allow create: if hasOnlySignupFields()
+      allow create: if signupDocumentIdMatchesEmail(signupId)
+        && hasOnlySignupFields()
         && hasRequiredSignupFields()
+        && signupIsOpen()
         && (
-          (isStudent() && hasValidStudentSignupFields())
+          (canUseSignedInSignup() && hasValidSignedInSignupFields())
+          || hasValidGuestSignupFields()
+        );
+
+      allow update: if signupDocumentIdMatchesEmail(signupId)
+        && hasOnlySignupFields()
+        && hasRequiredSignupFields()
+        && signupKeepsSameEmailAndEvent()
+        && signupIsOpen()
+        && (
+          (canUseSignedInSignup() && hasValidSignedInSignupFields())
           || hasValidGuestSignupFields()
         );
 
@@ -154,9 +204,7 @@ service cloud.firestore {
           || isStaff()
         );
 
-      allow update: if false;
-
-      allow delete: if isStudent()
+      allow delete: if canUseSignedInSignup()
         && resource.data.studentId == request.auth.uid;
     }
 

@@ -20,6 +20,8 @@ type DashboardProps = {
   initialEventId?: string;
 };
 
+type StaffViewMode = "staff" | "student";
+
 function dashboardErrorMessage(error: unknown) {
   if (error instanceof FirebaseError && error.code === "permission-denied") {
     return "Firebase blocked this profile read. Check that the latest Firestore rules are published.";
@@ -28,10 +30,23 @@ function dashboardErrorMessage(error: unknown) {
   return "Could not load your profile. Please refresh and try again.";
 }
 
+function staffToggleButtonClass(isActive: boolean) {
+  const baseClassName =
+    "inline-flex h-10 flex-1 items-center justify-center rounded-md px-4 text-sm font-medium transition sm:flex-none";
+
+  if (isActive) {
+    return `${baseClassName} bg-blue-700 text-white`;
+  }
+
+  return `${baseClassName} text-zinc-700 hover:bg-zinc-100`;
+}
+
 export function Dashboard({ initialEventId = "" }: DashboardProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [staffViewMode, setStaffViewMode] =
+    useState<StaffViewMode>("staff");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -133,7 +148,42 @@ export function Dashboard({ initialEventId = "" }: DashboardProps) {
         </div>
 
         {currentUser && role === "staff" ? (
-          <StaffOpportunitiesList embedded />
+          <>
+            <div
+              aria-label="Dashboard view"
+              className="mt-6 flex rounded-lg border border-zinc-200 bg-white p-1 shadow-sm sm:w-fit"
+              role="group"
+            >
+              <button
+                aria-pressed={staffViewMode === "staff"}
+                className={staffToggleButtonClass(staffViewMode === "staff")}
+                onClick={() => setStaffViewMode("staff")}
+                type="button"
+              >
+                Staff view
+              </button>
+              <button
+                aria-pressed={staffViewMode === "student"}
+                className={staffToggleButtonClass(
+                  staffViewMode === "student",
+                )}
+                onClick={() => setStaffViewMode("student")}
+                type="button"
+              >
+                Student view
+              </button>
+            </div>
+
+            {staffViewMode === "staff" ? (
+              <StaffOpportunitiesList embedded />
+            ) : (
+              <StudentOpportunitiesList
+                currentUser={currentUser}
+                initialEventId={initialEventId}
+                profile={profile}
+              />
+            )}
+          </>
         ) : null}
 
         {currentUser && role === "student" ? (

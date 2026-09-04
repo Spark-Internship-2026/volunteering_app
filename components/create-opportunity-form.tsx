@@ -7,6 +7,7 @@ import { type FormEvent, useState } from "react";
 
 import { NavigationLinks } from "@/components/navigation-links";
 import { auth, db } from "@/lib/firebase";
+import { signupClosesAtForDate } from "@/lib/opportunities";
 
 function opportunityErrorMessage(error: unknown) {
   if (error instanceof FirebaseError && error.code === "permission-denied") {
@@ -48,6 +49,13 @@ export function CreateOpportunityForm() {
       return;
     }
 
+    const signupClosesAt = signupClosesAtForDate(date);
+
+    if (!signupClosesAt) {
+      setError("Choose a valid date.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -68,6 +76,7 @@ export function CreateOpportunityForm() {
         videoUrl: "",
         createdBy: user.uid,
         createdAt: serverTimestamp(),
+        signupClosesAt,
       });
 
       router.push(`/staff/events/${opportunity.id}`);

@@ -7,8 +7,6 @@ import {
   type User,
 } from "firebase/auth";
 import {
-  addDoc,
-  collection,
   deleteDoc,
   doc,
   getDoc,
@@ -22,10 +20,12 @@ import { NavigationLinks } from "@/components/navigation-links";
 import {
   formatHours,
   formatOpportunityDate,
+  isOpportunityPast,
   opportunityFromData,
   type Opportunity,
 } from "@/lib/opportunities";
 import { auth, db } from "@/lib/firebase";
+import { normalizeSignupEmail, signupDocIdForEmail } from "@/lib/signups";
 
 type UserProfile = {
   name?: string;
@@ -69,7 +69,7 @@ function signupErrorMessage(
   if (error instanceof FirebaseError && error.code === "permission-denied") {
     return action === "remove"
       ? "Firebase denied this removal. Confirm this is your signup and the latest rules are published."
-      : "Firebase denied this signup. Confirm you are using a student account and the latest rules are published.";
+      : "Firebase denied this signup. Confirm you are using a student or staff account and the latest rules are published.";
   }
 
   return action === "remove"
@@ -124,6 +124,14 @@ function EventDetailsCard({ opportunity }: { opportunity: Opportunity }) {
       ) : null}
     </article>
   );
+}
+
+function canUseSignedInSignup(profile: UserProfile | null) {
+  return profile?.role === "student" || profile?.role === "staff";
+}
+
+function signupEmailForUser(currentUser: User, profile: UserProfile | null) {
+  return normalizeSignupEmail(currentUser.email ?? profile?.email ?? "");
 }
 
 export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
@@ -258,23 +266,31 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
     setGuestError("");
     setGuestMessage("");
 
-    const trimmedEmail = guestEmail.trim().toLowerCase();
+    const trimmedEmail = normalizeSignupEmail(guestEmail);
 
     if (!isValidEmail(trimmedEmail)) {
       setGuestError("Enter a valid email address.");
       return;
     }
 
+    if (opportunity && isOpportunityPast(opportunity.date)) {
+      setGuestError("This event has passed, so signups are closed.");
+      return;
+    }
+
     setIsGuestSubmitting(true);
 
     try {
-      await addDoc(collection(db, "signups"), {
-        studentId: "guest",
-        studentName: "GUEST",
-        studentEmail: trimmedEmail,
-        opportunityId,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, "signups", signupDocIdForEmail(opportunityId, trimmedEmail)),
+        {
+          studentId: "guest",
+          studentName: "GUEST",
+          studentEmail: trimmedEmail,
+          opportunityId,
+          createdAt: serverTimestamp(),
+        },
+      );
 
       setGuestEmail("");
       setIsGuestSignedUp(true);
@@ -296,25 +312,39 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
       return;
     }
 
-    if (profile?.role !== "student") {
-      setError("Use a student account to sign up for events.");
+    if (!canUseSignedInSignup(profile)) {
+      setError("Use a student or staff account to sign up for events.");
       return;
     }
 
-    const studentEmail = currentUser.email ?? profile?.email ?? "";
+    if (opportunity && isOpportunityPast(opportunity.date)) {
+      setError("This event has passed, so signups are closed.");
+      return;
+    }
+
+    const studentEmail = signupEmailForUser(currentUser, profile);
+
+    if (!studentEmail) {
+      setError("This account needs an email address before it can sign up.");
+      return;
+    }
+
     const studentName =
       profile?.name ?? currentUser.displayName ?? studentEmail ?? "Student";
 
     setIsSubmitting(true);
 
     try {
-      await setDoc(doc(db, "signups", `${currentUser.uid}_${opportunityId}`), {
-        studentId: currentUser.uid,
-        studentName,
-        studentEmail,
-        opportunityId,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(
+        doc(db, "signups", signupDocIdForEmail(opportunityId, studentEmail)),
+        {
+          studentId: currentUser.uid,
+          studentName,
+          studentEmail,
+          opportunityId,
+          createdAt: serverTimestamp(),
+        },
+      );
 
       setIsAlreadySignedUp(true);
       setMessage("You are signed up.");
@@ -335,15 +365,29 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
       return;
     }
 
-    if (profile?.role !== "student") {
-      setError("Use a student account to remove a signup.");
+    if (!canUseSignedInSignup(profile)) {
+      setError("Use a student or staff account to remove a signup.");
+      return;
+    }
+
+    if (opportunity && isOpportunityPast(opportunity.date)) {
+      setError("This event has passed, so signup changes are closed.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await deleteDoc(doc(db, "signups", `${currentUser.uid}_${opportunityId}`));
+      await deleteDoc(
+        doc(
+          db,
+          "signups",
+          signupDocIdForEmail(
+            opportunityId,
+            signupEmailForUser(currentUser, profile),
+          ),
+        ),
+      );
 
       setIsAlreadySignedUp(false);
       setMessage("Your signup was removed.");
@@ -376,6 +420,10 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
   }
 
   if (!currentUser) {
+    const signupsClosed = opportunity
+      ? isOpportunityPast(opportunity.date)
+      : false;
+
     return (
       <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950">
         <section className="mx-auto w-full max-w-5xl">
@@ -398,7 +446,7 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
                   <input
                     autoComplete="email"
                     className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                    disabled={isGuestSignedUp}
+                    disabled={signupsClosed || isGuestSignedUp}
                     onChange={(event) => setGuestEmail(event.target.value)}
                     required
                     type="email"
@@ -415,6 +463,12 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
                   </p>
                 ) : null}
 
+                {signupsClosed ? (
+                  <p className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+                    This event has passed, so signups are closed.
+                  </p>
+                ) : null}
+
                 {guestMessage ? (
                   <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
                     {guestMessage}
@@ -423,14 +477,18 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
 
                 <button
                   className="flex h-11 w-full items-center justify-center rounded-md bg-blue-700 px-4 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
-                  disabled={isGuestSubmitting || isGuestSignedUp}
+                  disabled={
+                    signupsClosed || isGuestSubmitting || isGuestSignedUp
+                  }
                   type="submit"
                 >
-                  {isGuestSignedUp
-                    ? "Signed up"
-                    : isGuestSubmitting
-                      ? "Signing up"
-                      : "Sign up as guest"}
+                  {signupsClosed
+                    ? "Event passed"
+                    : isGuestSignedUp
+                      ? "Signed up"
+                      : isGuestSubmitting
+                        ? "Signing up"
+                        : "Sign up as guest"}
                 </button>
               </form>
             </section>
@@ -488,6 +546,10 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
     );
   }
 
+  const signupsClosed = opportunity
+    ? isOpportunityPast(opportunity.date)
+    : false;
+
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950">
       <section className="mx-auto w-full max-w-2xl">
@@ -532,16 +594,18 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
                   ? "border border-red-200 bg-white text-red-700 hover:bg-red-50"
                   : "bg-blue-700 text-white hover:bg-blue-800"
               }`}
-              disabled={isSubmitting}
+              disabled={signupsClosed || isSubmitting}
               type="submit"
             >
-              {isAlreadySignedUp
-                ? isSubmitting
-                  ? "Removing"
-                  : "Remove signup"
-                : isSubmitting
-                  ? "Signing up"
-                  : "Sign up"}
+              {signupsClosed
+                ? "Event passed"
+                : isAlreadySignedUp
+                  ? isSubmitting
+                    ? "Removing"
+                    : "Remove signup"
+                  : isSubmitting
+                    ? "Signing up"
+                    : "Sign up"}
             </button>
           </form>
         ) : null}

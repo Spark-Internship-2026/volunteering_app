@@ -21,10 +21,13 @@ import {
 import {
   formatHours,
   formatOpportunityDate,
+  getLocalDateKey,
+  isOpportunityPast,
   opportunityFromData,
   type Opportunity,
 } from "@/lib/opportunities";
 import { db } from "@/lib/firebase";
+import { normalizeSignupEmail, signupDocIdForEmail } from "@/lib/signups";
 
 type UserProfile = {
   name?: string;
@@ -48,7 +51,7 @@ function opportunitiesErrorMessage(error: unknown) {
 
 function signupErrorMessage(error: unknown) {
   if (error instanceof FirebaseError && error.code === "permission-denied") {
-    return "Firebase denied this signup. Confirm your user doc has role: student and the latest rules are published.";
+    return "Firebase denied this signup. Confirm your user doc has role: student or staff and the latest rules are published.";
   }
 
   return "Could not sign up. Please try again.";
@@ -74,7 +77,12 @@ function signupButtonLabel(
   isSignedUp: boolean,
   isSubmitting: boolean,
   isRemoving: boolean,
+  isPast: boolean,
 ) {
+  if (isPast) {
+    return "Event passed";
+  }
+
   if (isSignedUp) {
     return isRemoving ? "Removing" : "Remove signup";
   }
@@ -96,6 +104,14 @@ function sortOpportunities(opportunities: Opportunity[]) {
   });
 }
 
+function canUseStudentSignup(profile: UserProfile | null) {
+  return profile?.role === "student" || profile?.role === "staff";
+}
+
+function signupEmailForUser(currentUser: User, profile: UserProfile | null) {
+  return normalizeSignupEmail(currentUser.email ?? profile?.email ?? "");
+}
+
 export function StudentOpportunitiesList({
   currentUser,
   initialEventId = "",
@@ -111,6 +127,7 @@ export function StudentOpportunitiesList({
   const [removingOpportunityId, setRemovingOpportunityId] = useState("");
   const [selectedOpportunityId, setSelectedOpportunityId] =
     useState(initialEventId);
+  const [todayDateKey, setTodayDateKey] = useState(getLocalDateKey);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -193,23 +210,44 @@ export function StudentOpportunitiesList({
     };
   }, [selectedOpportunity]);
 
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setTodayDateKey(getLocalDateKey());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
   async function handleSignup(opportunity: Opportunity) {
     setError("");
     setMessage("");
 
-    if (profile?.role !== "student") {
-      setError("This account needs role: student before it can sign up.");
+    if (isOpportunityPast(opportunity.date, todayDateKey)) {
+      setError("This event has passed, so signups are closed.");
       return;
     }
 
-    const studentEmail = currentUser.email ?? profile.email ?? "";
+    if (!canUseStudentSignup(profile)) {
+      setError("This account needs role: student or staff before it can sign up.");
+      return;
+    }
+
+    const studentEmail = signupEmailForUser(currentUser, profile);
+
+    if (!studentEmail) {
+      setError("This account needs an email address before it can sign up.");
+      return;
+    }
+
     const studentName =
-      profile.name ?? currentUser.displayName ?? studentEmail ?? "Student";
+      profile?.name ?? currentUser.displayName ?? studentEmail ?? "Student";
 
     setSubmittingOpportunityId(opportunity.id);
 
     try {
-      const signupDocId = `${currentUser.uid}_${opportunity.id}`;
+      const signupDocId = signupDocIdForEmail(opportunity.id, studentEmail);
 
       await setDoc(doc(db, "signups", signupDocId), {
         studentId: currentUser.uid,
@@ -241,14 +279,24 @@ export function StudentOpportunitiesList({
     setError("");
     setMessage("");
 
-    if (profile?.role !== "student") {
-      setError("This account needs role: student before it can remove a signup.");
+    if (isOpportunityPast(opportunity.date, todayDateKey)) {
+      setError("This event has passed, so signup changes are closed.");
+      return;
+    }
+
+    if (!canUseStudentSignup(profile)) {
+      setError(
+        "This account needs role: student or staff before it can remove a signup.",
+      );
       return;
     }
 
     const signupDocId =
       signupDocIdsByOpportunityId.get(opportunity.id) ??
-      `${currentUser.uid}_${opportunity.id}`;
+      signupDocIdForEmail(
+        opportunity.id,
+        signupEmailForUser(currentUser, profile),
+      );
 
     setRemovingOpportunityId(opportunity.id);
 
@@ -283,8 +331,26 @@ export function StudentOpportunitiesList({
     }
   }
 
+  const signedUpOpportunities = opportunities.filter((opportunity) =>
+    signedUpOpportunityIds.has(opportunity.id),
+  );
+  const activeOpportunities = opportunities.filter(
+    (opportunity) => !isOpportunityPast(opportunity.date, todayDateKey),
+  );
+  const pastOpportunities = opportunities.filter((opportunity) =>
+    isOpportunityPast(opportunity.date, todayDateKey),
+  );
+
+  const totalHours = signedUpOpportunities.reduce(
+    (sum, opportunity) => sum + (opportunity.hours ?? 0),
+    0,
+  );
+
   const selectedOpportunityIsSignedUp = selectedOpportunity
     ? signedUpOpportunityIds.has(selectedOpportunity.id)
+    : false;
+  const selectedOpportunityIsPast = selectedOpportunity
+    ? isOpportunityPast(selectedOpportunity.date, todayDateKey)
     : false;
   const selectedOpportunityIsSubmitting =
     selectedOpportunity?.id === submittingOpportunityId;
@@ -293,7 +359,25 @@ export function StudentOpportunitiesList({
 
   return (
     <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-semibold">Available Events</h2>
+      <h2 className="text-lg font-semibold">Your Volunteering</h2>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <p className="text-sm font-medium text-blue-700">Total Hours</p>
+          <p className="mt-2 text-3xl font-semibold text-blue-950">
+            {formatHours(totalHours)}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+          <p className="text-sm font-medium text-zinc-600">Events Joined</p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950">
+            {signedUpOpportunities.length}
+          </p>
+        </div>
+      </div>
+
+      <h2 className="mt-8 text-lg font-semibold">Available Events</h2>
 
       {error ? (
         <p
@@ -314,14 +398,14 @@ export function StudentOpportunitiesList({
         <p className="mt-4 text-sm text-zinc-600">Loading events...</p>
       ) : null}
 
-      {!isLoading && opportunities.length === 0 ? (
+      {!isLoading && activeOpportunities.length === 0 ? (
         <p className="mt-4 text-sm text-zinc-600">
-          No events have been posted yet.
+          No available events right now.
         </p>
       ) : null}
 
       <div className="mt-4 space-y-3">
-        {opportunities.map((opportunity) => {
+        {activeOpportunities.map((opportunity) => {
           const isSignedUp = signedUpOpportunityIds.has(opportunity.id);
           const isSubmitting = submittingOpportunityId === opportunity.id;
           const isRemoving = removingOpportunityId === opportunity.id;
@@ -383,7 +467,104 @@ export function StudentOpportunitiesList({
                   }
                   type="button"
                 >
-                  {signupButtonLabel(isSignedUp, isSubmitting, isRemoving)}
+                  {signupButtonLabel(
+                    isSignedUp,
+                    isSubmitting,
+                    isRemoving,
+                    false,
+                  )}
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <h2 className="mt-8 text-lg font-semibold">Past Events</h2>
+
+      {!isLoading && pastOpportunities.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
+          No past events yet.
+        </p>
+      ) : null}
+
+      <div className="mt-4 space-y-3">
+        {pastOpportunities.map((opportunity) => {
+          const isSignedUp = signedUpOpportunityIds.has(opportunity.id);
+
+          return (
+            <article
+              className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+              key={opportunity.id}
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div
+                  className="min-w-0 flex-1 cursor-pointer rounded-md outline-none transition focus-visible:ring-2 focus-visible:ring-blue-200"
+                  onClick={() => setSelectedOpportunityId(opportunity.id)}
+                  onKeyDown={(event) =>
+                    handleOpenDetailsKeyDown(event, opportunity)
+                  }
+                  role="button"
+                  tabIndex={0}
+                >
+                  <h3 className="text-base font-semibold">
+                    {opportunity.title}
+                  </h3>
+                  <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
+                    <div>
+                      <dt className="sr-only">Date</dt>
+                      <dd>{formatOpportunityDate(opportunity.date)}</dd>
+                    </div>
+                    <div>
+                      <dt className="sr-only">Hours</dt>
+                      <dd>{formatHours(opportunity.hours)}</dd>
+                    </div>
+                    {opportunity.location ? (
+                      <div>
+                        <dt className="sr-only">Location</dt>
+                        <dd>{opportunity.location}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {opportunity.description ? (
+                    <p className="mt-3 text-sm leading-6 text-zinc-600">
+                      {opportunity.description}
+                    </p>
+                  ) : null}
+                  {opportunity.wrapUpSummary ? (
+                    <div className="mt-4 rounded-md bg-white p-3">
+                      <p className="text-xs font-medium uppercase text-zinc-500">
+                        Event notes
+                      </p>
+                      <p className="mt-2 text-sm text-zinc-700">
+                        {opportunity.wrapUpSummary}
+                      </p>
+                    </div>
+                  ) : null}
+                  {opportunity.videoUrl ? (
+                    <a
+                      className="mt-3 inline-block text-sm font-medium text-blue-700 hover:underline"
+                      href={opportunity.videoUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Watch notes video
+                    </a>
+                  ) : null}
+                  <p className="mt-3 text-sm font-medium text-blue-700">
+                    View details
+                  </p>
+                </div>
+
+                <button
+                  className={signupButtonClass(
+                    isSignedUp,
+                    "inline-flex h-10 min-w-32 shrink-0 items-center justify-center",
+                  )}
+                  disabled
+                  type="button"
+                >
+                  {signupButtonLabel(isSignedUp, false, false, true)}
                 </button>
               </div>
             </article>
@@ -463,13 +644,37 @@ export function StudentOpportunitiesList({
               </p>
             )}
 
+            {selectedOpportunityIsPast && selectedOpportunity.wrapUpSummary ? (
+              <div className="mt-5 rounded-md bg-zinc-50 p-3">
+                <p className="text-xs font-medium uppercase text-zinc-500">
+                  Event notes
+                </p>
+                <p className="mt-2 text-sm text-zinc-700">
+                  {selectedOpportunity.wrapUpSummary}
+                </p>
+              </div>
+            ) : null}
+
+            {selectedOpportunityIsPast && selectedOpportunity.videoUrl ? (
+              <a
+                className="mt-3 inline-block text-sm font-medium text-blue-700 hover:underline"
+                href={selectedOpportunity.videoUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Watch notes video
+              </a>
+            ) : null}
+
             <button
               className={signupButtonClass(
                 selectedOpportunityIsSignedUp,
                 "mt-5 flex h-11 w-full items-center justify-center",
               )}
               disabled={
-                selectedOpportunityIsSubmitting || selectedOpportunityIsRemoving
+                selectedOpportunityIsPast ||
+                selectedOpportunityIsSubmitting ||
+                selectedOpportunityIsRemoving
               }
               onClick={() =>
                 selectedOpportunityIsSignedUp
@@ -482,6 +687,7 @@ export function StudentOpportunitiesList({
                 selectedOpportunityIsSignedUp,
                 selectedOpportunityIsSubmitting,
                 selectedOpportunityIsRemoving,
+                selectedOpportunityIsPast,
               )}
             </button>
           </section>

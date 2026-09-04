@@ -9,6 +9,8 @@ import { NavigationLinks } from "@/components/navigation-links";
 import {
   formatHours,
   formatOpportunityDate,
+  getLocalDateKey,
+  isOpportunityPast,
   opportunityFromData,
   type Opportunity,
 } from "@/lib/opportunities";
@@ -48,6 +50,7 @@ export function StaffOpportunitiesList({
   mode = "opportunities",
 }: StaffOpportunitiesListProps) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [todayDateKey, setTodayDateKey] = useState(getLocalDateKey);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const isNotesMode = mode === "notes";
@@ -84,6 +87,70 @@ export function StaffOpportunitiesList({
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setTodayDateKey(getLocalDateKey());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
+  const activeOpportunities = opportunities.filter(
+    (opportunity) => !isOpportunityPast(opportunity.date, todayDateKey),
+  );
+  const pastOpportunities = opportunities.filter((opportunity) =>
+    isOpportunityPast(opportunity.date, todayDateKey),
+  );
+
+  function renderOpportunityGrid(opportunitiesToRender: Opportunity[]) {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {opportunitiesToRender.map((opportunity) => (
+          <Link
+            className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+            href={`/staff/events/${opportunity.id}${
+              isNotesMode ? "#notes" : ""
+            }`}
+            key={opportunity.id}
+          >
+            <article className="flex h-full flex-col justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">{opportunity.title}</h3>
+                <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
+                  <div>
+                    <dt className="sr-only">Date</dt>
+                    <dd>{formatOpportunityDate(opportunity.date)}</dd>
+                  </div>
+                  <div>
+                    <dt className="sr-only">Hours</dt>
+                    <dd>{formatHours(opportunity.hours)}</dd>
+                  </div>
+                  {opportunity.location ? (
+                    <div>
+                      <dt className="sr-only">Location</dt>
+                      <dd>{opportunity.location}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+                {opportunity.description ? (
+                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-600">
+                    {opportunity.description}
+                  </p>
+                ) : null}
+              </div>
+
+              <p className="text-sm font-medium text-blue-700">
+                {isNotesMode ? "Edit notes" : "View details"}
+              </p>
+            </article>
+          </Link>
+        ))}
+      </div>
+    );
+  }
 
   const content = (
     <section className={embedded ? "mt-6" : "mx-auto w-full max-w-4xl"}>
@@ -142,50 +209,27 @@ export function StaffOpportunitiesList({
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {opportunities.map((opportunity) => (
-          <Link
-            className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
-            href={`/staff/events/${opportunity.id}${
-              isNotesMode ? "#notes" : ""
-            }`}
-            key={opportunity.id}
-          >
-            <article
-              className="flex h-full flex-col justify-between gap-4"
-            >
-              <div>
-                <h3 className="text-lg font-semibold">{opportunity.title}</h3>
-                <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
-                  <div>
-                    <dt className="sr-only">Date</dt>
-                    <dd>{formatOpportunityDate(opportunity.date)}</dd>
-                  </div>
-                  <div>
-                    <dt className="sr-only">Hours</dt>
-                    <dd>{formatHours(opportunity.hours)}</dd>
-                  </div>
-                  {opportunity.location ? (
-                    <div>
-                      <dt className="sr-only">Location</dt>
-                      <dd>{opportunity.location}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-                {opportunity.description ? (
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-600">
-                    {opportunity.description}
-                  </p>
-                ) : null}
-              </div>
+      {!isLoading && opportunities.length > 0 ? (
+        <>
+          <h3 className="mb-3 text-base font-semibold">Available Events</h3>
+          {activeOpportunities.length === 0 ? (
+            <p className="mb-6 rounded-lg border border-zinc-200 bg-white p-5 text-sm text-zinc-600 shadow-sm">
+              No available events right now.
+            </p>
+          ) : (
+            renderOpportunityGrid(activeOpportunities)
+          )}
 
-              <p className="text-sm font-medium text-blue-700">
-                {isNotesMode ? "Edit notes" : "View details"}
-              </p>
-            </article>
-          </Link>
-        ))}
-      </div>
+          <h3 className="mb-3 mt-8 text-base font-semibold">Past Events</h3>
+          {pastOpportunities.length === 0 ? (
+            <p className="rounded-lg border border-zinc-200 bg-white p-5 text-sm text-zinc-600 shadow-sm">
+              No past events yet.
+            </p>
+          ) : (
+            renderOpportunityGrid(pastOpportunities)
+          )}
+        </>
+      ) : null}
     </section>
   );
 
