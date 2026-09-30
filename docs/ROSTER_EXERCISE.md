@@ -28,7 +28,18 @@ npm run build
 npm run dev:local
 ```
 
-Open http://localhost:3000 and take a screenshot of the app running locally (Mac: `Cmd + Shift + 4`, Windows: `Win + Shift + S`). You need it for your PR. Press `Ctrl+C` once to stop the app.
+In a second terminal, add the sample accounts:
+
+```bash
+npm run seed:emulator
+```
+
+Open http://localhost:3000 and take two screenshots (Mac: `Cmd + Shift + 4`, Windows: `Win + Shift + S`). You need both for your PR:
+
+1. **Staff:** log in as `staff-events@example.com` (password `localdev123`) and screenshot the app.
+2. **Student:** log out, log in as `student1@example.com` (password `localdev123`) and screenshot the app.
+
+Each screenshot must show the app running at localhost:3000 while you're logged in. Press `Ctrl+C` once to stop the app.
 
 ## 4. Save and upload
 
@@ -43,7 +54,7 @@ git push -u origin roster/<your-github-username>
 Click **Compare & pull request**. Fill in the template:
 
 - **What this PR does:** "Adds my roster file."
-- **Proof it works:** a screenshot of the app running locally at localhost:3000. Drag the image into the box.
+- **Proof it works:** both screenshots, the staff login and the student login, showing the app running locally at localhost:3000. Drag the images into the box.
 - **Firestore changes:** write "none" in each field.
 
 ## 6. Watch the checks
