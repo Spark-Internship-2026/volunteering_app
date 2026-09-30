@@ -126,3 +126,12 @@ gh auth login               # GitHub CLI (optional)
 - Guests (signed out) can bump an event's `signupCount` by one without the rules being able to verify a signup exists (strict rules). The long-term fix is a small server-side function.
 - Free Firebase quotas are shared by every preview and staging user.
 - `next.config.ts` aliases `@firebase/firestore` to its browser build because Cloudflare Workers block `eval`. Don't remove that.
+
+### Watching Firebase usage
+
+Staging is one free Firebase project (Spark plan) shared by about 15 people and every PR preview. It allows 50,000 reads, 20,000 writes and 20,000 deletes a day. When a quota runs out, the app stops working for everyone until it resets at midnight Pacific. The usual cause is a runaway read loop in new code (see the guardrails in `AGENTS.md`).
+
+- **Check it:** Firebase console > `volunteering-39547` > Firestore Database > **Usage** tab. During a busy session, look every so often. A steep climb while nobody is testing means a loop.
+- **If it is blown:** tell the teams to switch to the emulators (`npm run dev:local`) until it resets. Find the cause by asking who merged or deployed a preview just before the climb, and check their PR for listeners without a cleanup.
+- **Budget alerts need the paid Blaze plan** and only send a notice, they do not stop spending. On the free plan the hard stop at the daily limit is the protection.
+- **No backups exist** on the free plan. That is fine for staging test data. Before real users arrive, set up backups (paid plan) for production.
