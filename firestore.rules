@@ -47,7 +47,12 @@ service cloud.firestore {
         "createdBy",
         "createdAt",
         "signupClosesAt",
-        "updatedAt"
+        "updatedAt",
+        "capacity",
+        "signupCount",
+        "templateId",
+        "seriesId",
+        "recurrence"
       ]);
     }
 
@@ -57,7 +62,10 @@ service cloud.firestore {
         "studentName",
         "studentEmail",
         "opportunityId",
-        "createdAt"
+        "createdAt",
+        "status",
+        "checkedInAt",
+        "completedAt"
       ]);
     }
 
@@ -86,6 +94,14 @@ service cloud.firestore {
         && (
           !request.resource.data.keys().hasAny(["signupClosesAt"])
           || request.resource.data.signupClosesAt is timestamp
+        )
+        && (
+          !request.resource.data.keys().hasAny(["capacity"])
+          || (request.resource.data.capacity is int && request.resource.data.capacity > 0)
+        )
+        && (
+          !request.resource.data.keys().hasAny(["signupCount"])
+          || (request.resource.data.signupCount is int && request.resource.data.signupCount >= 0)
         );
     }
 
@@ -144,6 +160,69 @@ service cloud.firestore {
         && request.resource.data.opportunityId.size() > 0;
     }
 
+    // ---- Signup status (check-in / completion): staff only ----
+    function validSignupStatus() {
+      return !request.resource.data.keys().hasAny(["status"])
+        || request.resource.data.status in ["signed_up", "checked_in", "completed"];
+    }
+
+    // Students and guests may not set status fields when creating a signup.
+    function signupStatusAbsentOnCreate() {
+      return !request.resource.data.keys().hasAny(["checkedInAt", "completedAt"])
+        && (
+          !request.resource.data.keys().hasAny(["status"])
+          || request.resource.data.status == "signed_up"
+        );
+    }
+
+    // ...and may not change them on an existing signup.
+    function signupStatusUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(["status", "checkedInAt", "completedAt"]);
+    }
+
+    function onlySignupStatusChanges() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(["status", "checkedInAt", "completedAt"]);
+    }
+
+    // ---- Guest signups linked to an account later (verified email only) ----
+    function verifiedEmailIs(email) {
+      return isSignedIn()
+        && request.auth.token.get("email_verified", false) == true
+        && request.auth.token.email == email;
+    }
+
+    // ---- Live capacity counter (opportunities.signupCount) ----
+    // A signed-in user's own signup doc for an event.
+    function ownSignupPath(opportunityId) {
+      return /databases/$(database)/documents/signups/$(opportunityId + "_" + request.auth.token.email);
+    }
+
+    function signupCreatedInSameWrite(opportunityId) {
+      return !exists(ownSignupPath(opportunityId))
+        && existsAfter(ownSignupPath(opportunityId));
+    }
+
+    function signupDeletedInSameWrite(opportunityId) {
+      return exists(ownSignupPath(opportunityId))
+        && !existsAfter(ownSignupPath(opportunityId));
+    }
+
+    function currentSignupCount() {
+      return resource.data.get("signupCount", 0);
+    }
+
+    function onlySignupCountChanges() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(["signupCount"])
+        && request.resource.data.signupCount is int
+        && request.resource.data.signupCount >= 0
+        && (
+          !resource.data.keys().hasAny(["capacity"])
+          || request.resource.data.signupCount <= resource.data.capacity
+        );
+    }
+
     match /users/{userId} {
       allow read: if isOwner(userId);
 
@@ -175,13 +254,39 @@ service cloud.firestore {
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.createdAt == resource.data.createdAt;
 
+      // Live capacity: anyone signing up may bump the counter by exactly 1, and
+      // a signed-in user must create their own signup in the same write.
+      // Signed-out guests cannot be tied to a signup doc by rules, so their +1 is
+      // unpaired (known limitation; a server-side check is the long-term fix).
+      allow update: if onlySignupCountChanges()
+        && (
+          (
+            request.resource.data.signupCount == currentSignupCount() + 1
+            && (
+              !isSignedIn()
+              || (canUseSignedInSignup() && signupCreatedInSameWrite(opportunityId))
+            )
+          )
+          || (
+            request.resource.data.signupCount == currentSignupCount() - 1
+            && canUseSignedInSignup()
+            && signupDeletedInSameWrite(opportunityId)
+          )
+        );
+
       allow delete: if isStaff();
+    }
+
+    // Reusable event templates for staff.
+    match /eventTemplates/{templateId} {
+      allow read, write: if isStaff();
     }
 
     match /signups/{signupId} {
       allow create: if signupDocumentIdMatchesEmail(signupId)
         && hasOnlySignupFields()
         && hasRequiredSignupFields()
+        && signupStatusAbsentOnCreate()
         && signupIsOpen()
         && (
           (canUseSignedInSignup() && hasValidSignedInSignupFields())
@@ -192,20 +297,39 @@ service cloud.firestore {
         && hasOnlySignupFields()
         && hasRequiredSignupFields()
         && signupKeepsSameEmailAndEvent()
+        && signupStatusUntouched()
         && signupIsOpen()
         && (
           (canUseSignedInSignup() && hasValidSignedInSignupFields())
           || hasValidGuestSignupFields()
         );
 
+      // Staff check students in / mark them complete.
+      allow update: if isStaff()
+        && onlySignupStatusChanges()
+        && validSignupStatus();
+
+      // A verified account claims a guest signup made with the same email.
+      allow update: if resource.data.studentId == "guest"
+        && verifiedEmailIs(resource.data.studentEmail)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["studentId", "studentName"])
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.studentName is string
+        && request.resource.data.studentName.size() > 0;
+
       allow read: if isSignedIn()
         && (
           resource.data.studentId == request.auth.uid
           || isStaff()
+          || verifiedEmailIs(resource.data.studentEmail)
         );
 
-      allow delete: if canUseSignedInSignup()
-        && resource.data.studentId == request.auth.uid;
+      // Students remove their own signup; staff can remove any (e.g. deleting an event).
+      allow delete: if (
+          canUseSignedInSignup()
+          && resource.data.studentId == request.auth.uid
+        )
+        || isStaff();
     }
 
     match /{document=**} {

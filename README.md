@@ -1,54 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Spark Volunteering App
 
-## Local development
+A website where students sign up for volunteering events and staff create and manage those events.
 
-Prereqs: Node 20+, Java 21+ (`brew install openjdk`, then add `/opt/homebrew/opt/openjdk/bin` to your PATH).
+New to coding? Start here, then read the three guides in order.
+
+## The guides
+
+| # | Guide | Read it when |
+|---|---|---|
+| 1 | **[SETUP](docs/SETUP.md)** | You are installing tools and running the app on your laptop for the first time. Also the place to look when something breaks. |
+| 2 | **[MAKING A PULL REQUEST](docs/MAKING_A_PULL_REQUEST.md)** | You are about to change the code. Covers branches, proof that it works, review, security rules and using AI tools. |
+| 3 | **[DEPLOYMENTS](docs/DEPLOYMENTS.md)** | You want to know where the app runs, how changes go live, or you are the maintainer. |
+
+**Fastest start** (after installing Git, Node and Java, see SETUP):
 
 ```bash
+git clone https://github.com/Spark-PNW/volunteering_app
+cd volunteering_app
 npm install
-npm run dev:local   # Firebase Auth + Firestore emulators + Next.js on http://localhost:3000
+npm run dev:local        # then open http://localhost:3000
+npm run seed:emulator    # in a second terminal: adds sample accounts and events
 ```
 
-This runs fully offline against local emulators, so no real Firebase keys are needed and nobody's testing touches shared data. The emulator UI is at http://localhost:4000. Data persists in `.emulator-data/` (gitignored).
+## The big picture
 
-- Sample data: with `dev:local` running, `npm run seed:emulator` creates seeded users and events. Logins: `staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@`, `student1@`..`student3@example.com`, password `localdev123`.
-- Cloud test project: only the four staff accounts are seeded (`npm run seed:staff`). Students sign up normally.
-- Make any other user staff: sign up in the app, then `npm run make-staff -- you@example.com`.
-- Run against the real Firebase project instead: copy `.env.example` to `.env.local`, fill in the values, and use `npm run dev`.
-- Firestore rules tests: `npm run rules:test`.
+Three services work together. You only ever edit the code in this repository.
 
-### Rules: strict vs. open
+```
+   Your browser
+        |
+        |  1. asks for the website (pages, buttons, styling)
+        v
+  +-------------+
+  | Cloudflare  |   hosts the website's code and sends it to browsers
+  +-------------+
 
-- `firestore.rules` is the strict, production-ready rules file.
-- `firestore.dev.rules` is wide open for signed-in users. The emulator (`dev:local`) uses it, and `npm run rules:deploy:dev` deploys it to the cloud project while it holds only test data.
-- **Before launch:** run `npm run rules:deploy` to redeploy the strict rules and clear test data. Every PR must list its Firestore changes (see the PR template) so strict rules can be written for them.
-- `npm run emulators:strict` runs the emulators with the strict rules.
+   Your browser
+        |
+        |  2. logs users in, saves and loads events and signups
+        v
+  +-------------+
+  |  Firebase   |   keeps user accounts (login) and all the data (database)
+  +-------------+
 
-## Environments and deploys
+   GitHub keeps the code, runs automatic checks on every change,
+   and tells Cloudflare when to publish a new version.
+```
 
-| | Firebase project | Worker | How it deploys |
-|---|---|---|---|
-| Local | emulators (`npm run dev:local`) | none | your laptop |
-| PR preview | staging (`volunteering-39547`, open rules, test data) | `volunteering-app-staging`, alias `pr-<n>` | automatically per PR (`preview.yml`) |
-| Staging | staging (same project) | `volunteering-app-staging` | automatically on every merge to `main` (`deploy-staging.yml`) |
-| Production | `spark-volunteering-prod` (strict rules, real data) | `volunteering-app` | manually: Actions > "Deploy production" > Run workflow. Needs approval from a `production` environment reviewer. |
+- **The app** is written with **Next.js**, which is built on **React**. Both are ways of writing web pages in TypeScript (JavaScript with extra safety checks).
+- **Firebase** is Google's "backend in a box". This app has no server of its own. The browser talks straight to Firebase, and a file of **rules** decides who is allowed to read or change what.
+- **Cloudflare** is the company that serves our website to visitors. We use its **Workers** product, which runs the app on their computers around the world.
+- **GitHub** stores the code, lets us review each other's changes, and runs **GitHub Actions** (robots) that test and publish the site.
 
-- Staging URL: https://volunteering-app-staging.spark-internship-2026.workers.dev
-- Production URL: https://volunteering-app.spark-internship-2026.workers.dev
-- PR previews look like `https://pr-<n>-volunteering-app-staging.spark-internship-2026.workers.dev`.
-- Firebase web config lives in GitHub **environment** variables (`staging`, `production`); `CLOUDFLARE_API_TOKEN` is a repo secret. `NEXT_PUBLIC_FIREBASE_*` values are inlined at build time.
-- `main` is protected: CI (`check`) must pass, one approval is required, and the branch must be **up to date with `main`** before merging (use "Update branch").
-- Rollback: run "Deploy production" again with `ref` set to a previous commit or tag.
+## Words you will see
 
-### Rules deploys are separate (not part of the app deploy)
-- Production (strict): `npm run rules:deploy`. Run it whenever `firestore.rules` changes, **before** promoting code that needs the change.
-- Staging (open): `npm run rules:deploy:dev`.
-- `npm run reset:cloud` wipes the **staging** database only.
+| Word | What it means |
+|---|---|
+| **Git** | A tool that saves the history of every change to the code. |
+| **Repository (repo)** | The project folder that Git tracks. |
+| **Branch** | Your own copy of the code to work on without breaking anyone else. |
+| **Commit** | A saved checkpoint of your changes, with a short message. |
+| **Pull request (PR)** | "Please review my branch and add it to the main code." |
+| **Merge** | Adding an approved branch into `main`. |
+| **`main`** | The branch that holds the shared, working code. |
+| **Node.js / npm** | Node runs JavaScript on your computer. npm installs libraries and runs the project's commands (`npm run ...`). |
+| **Component** | A reusable piece of a page, like a form or a list. Lives in `components/`. |
+| **Authentication (Auth)** | Logging in: proving who you are. |
+| **Firestore** | Firebase's database. Data is stored as **documents** (like a form with named fields) inside **collections** (like folders). |
+| **Security rules** | A file (`firestore.rules`) that says who may read or write which documents. |
+| **Emulator** | A pretend copy of Firebase running on your own laptop, so you can test without touching real data. |
+| **Environment** | A separate copy of the app: your laptop, staging or production. |
+| **Preview URL** | A temporary website address made for one PR so you can try your change online. |
+| **CI** | Automatic checks (lint, build, tests) that run on every PR. A green check means they passed. |
+| **Deploy** | Publishing a version of the site so people can use it. |
+| **Lint** | A tool that spots common mistakes and style problems in code. |
 
-### Local Cloudflare preview
-`npm run preview:cf` builds and runs the Worker locally on http://localhost:8787.
+## A tour of the code
 
-`next.config.ts` aliases `@firebase/firestore` to its browser build. Workers block `eval`, which the Node build of Firestore needs. Don't remove it.
+```
+app/                 The pages. Each folder is a web address.
+  login/, signup/      /login, /signup
+  dashboard/           /dashboard (the home screen after login)
+  staff/               /staff/... pages that only staff can use
+components/          The building blocks used by pages (forms, lists, buttons)
+lib/
+  firebase.ts          Connects the app to Firebase (and to the emulators locally)
+  opportunities.ts     Helpers for event data (dates, hours)
+  signups.ts           Helpers for signup ids
+docs/                The three guides
+firestore.rules      Strict security rules
+firestore.dev.rules  Open security rules (staging, emulator, and production for now)
+tests/               Tests for the security rules and the PR proof check
+scripts/             Helper scripts: seed.mjs (sample data), make-staff.mjs
+.github/             PR template, code owners, and the robots (workflows)
+wrangler.jsonc       Cloudflare settings
+next.config.ts       Next.js settings
+```
 
-### Cloudflare token
-`CLOUDFLARE_API_TOKEN` (Cloudflare dashboard > My Profile > API Tokens > "Edit Cloudflare Workers" template, scoped to this account). Anyone with write access can read secrets through a workflow, so keep it scoped to Workers only.
+An **"opportunity"** in the code is a volunteering **event**. A **"signup"** is one student signing up for one event.
+
+**Where each team mostly works** (to avoid stepping on each other):
+
+| Team | Branch prefix | Mostly edits |
+|---|---|---|
+| Account & Authentication | `auth/` | `components/auth-form.tsx`, `app/login`, `app/signup`, guest-linking inside `components/opportunity-signup.tsx` |
+| Student Volunteer Experience | `student/` | `components/dashboard.tsx`, `components/student-opportunities-list.tsx` |
+| Event Management | `events/` | `components/create-opportunity-form.tsx`, new template and recurrence files, capacity in `components/opportunity-signup.tsx` |
+| Staff Experience | `staff/` | `components/staff-opportunities-list.tsx`, `components/navigation-links.tsx`, `components/staff-gate.tsx` |
+
+`components/opportunity-detail.tsx` is big and shared by several teams. **Put new UI in a new component file** and import it there, so you only make a small edit to the shared file. That prevents most merge conflicts.
