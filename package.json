@@ -7,27 +7,43 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "rules:test": "firebase emulators:exec --only firestore \"node --test tests/firestore.rules.test.mjs\"",
-    "rules:deploy": "firebase deploy --only firestore:rules"
+    "rules:test": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\"",
+    "rules:deploy": "firebase deploy --only firestore:rules",
+    "make-staff": "node scripts/make-staff.mjs",
+    "emulators": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:start --config firebase.dev.json --only auth,firestore --import=.emulator-data --export-on-exit",
+    "dev:local": "concurrently -k -n emu,next \"npm:emulators\" \"wait-on -t 60000 tcp:9099 tcp:8080 && NEXT_PUBLIC_USE_EMULATORS=true next dev\"",
+    "build:cf": "opennextjs-cloudflare build",
+    "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload:cf": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "emulators:strict": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:start --config firebase.json --only auth,firestore --import=.emulator-data --export-on-exit",
+    "rules:deploy:dev": "firebase deploy --only firestore:rules --config firebase.dev.json",
+    "seed": "node scripts/seed.mjs",
+    "seed:emulator": "node scripts/seed.mjs --emulator",
+    "reset:cloud": "firebase firestore:delete --all-collections --force"
   },
   "dependencies": {
     "firebase": "^12.17.1",
-    "next": "16.3.1",
+    "next": "16.3.7",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
+    "@opennextjs/cloudflare": "^1.20.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.3.1",
+    "eslint-config-next": "16.3.7",
     "firebase-tools": "^15.27.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^8.0.0",
+    "wrangler": "^4.144.0"
   }
 }
