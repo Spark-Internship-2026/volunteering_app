@@ -12,6 +12,7 @@ npm run dev:local   # Firebase Auth + Firestore emulators + Next.js on http://lo
 This runs fully offline against local emulators, so no real Firebase keys are needed and nobody's testing touches shared data. The emulator UI is at http://localhost:4000. Data persists in `.emulator-data/` (gitignored).
 
 - Sample data: with `dev:local` running, `npm run seed:emulator` creates seeded users and events. Logins: `staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@`, `student1@`..`student3@example.com`, password `localdev123`.
+- Cloud test project: only the four staff accounts are seeded (`npm run seed:staff`). Students sign up normally.
 - Make any other user staff: sign up in the app, then `npm run make-staff -- you@example.com`.
 - Run against the real Firebase project instead: copy `.env.example` to `.env.local`, fill in the values, and use `npm run dev`.
 - Firestore rules tests: `npm run rules:test`.

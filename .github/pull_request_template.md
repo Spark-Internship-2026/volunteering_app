@@ -2,7 +2,7 @@
 <!-- One or two sentences. Which team / feature? -->
 
 ## How to test
-<!-- Preview URL + steps. Seeded logins: staff-<team>@example.com / student1@example.com, password localdev123 -->
+<!-- Preview URL + steps. Staff logins: staff-auth@ / staff-student@ / staff-events@ / staff-staff@example.com (password localdev123); sign up for a student -->
 
 ## Firestore changes (required, even if "none")
 Staging/dev uses open rules, so these will NOT fail there but WILL fail in production

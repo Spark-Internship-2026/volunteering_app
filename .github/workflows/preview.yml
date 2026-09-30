@@ -52,7 +52,7 @@ jobs:
             const url = upload.preview_alias_url || upload.preview_url;
             const marker = "<!-- cloudflare-preview -->";
             const sha = context.payload.pull_request.head.sha.slice(0, 7);
-            const body = `${marker}\n**Preview:** ${url}\n\nCommit \`${sha}\`. Uses the shared Firebase project (open rules, test data only). Seeded logins: \`staff-<team>@example.com\` / \`student1@example.com\`, password \`localdev123\`.`;
+            const body = `${marker}\n**Preview:** ${url}\n\nCommit \`${sha}\`. Uses the shared Firebase project (open rules, test data only). Staff logins: \`staff-auth@\`, \`staff-student@\`, \`staff-events@\`, \`staff-staff@example.com\`, password \`localdev123\`. Sign up normally for a student account.`;
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });

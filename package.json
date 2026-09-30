@@ -20,7 +20,8 @@
     "rules:deploy:dev": "firebase deploy --only firestore:rules --config firebase.dev.json",
     "seed": "node scripts/seed.mjs",
     "seed:emulator": "node scripts/seed.mjs --emulator",
-    "reset:cloud": "firebase firestore:delete --all-collections --force"
+    "reset:cloud": "firebase firestore:delete --all-collections --force",
+    "seed:staff": "node scripts/seed.mjs --staff-only"
   },
   "dependencies": {
     "firebase": "^12.17.1",

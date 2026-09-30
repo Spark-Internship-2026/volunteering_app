@@ -1,6 +1,7 @@
 // Idempotent seed: test users (one staff per team + students) and sample events.
 //   npm run seed:emulator   -> local emulators (start `npm run dev:local` first)
 //   npm run seed            -> the cloud project in .env.local (needs dev rules deployed)
+//   add --staff-only        -> only the four staff accounts (no students, events or signups)
 // Shared password for all seeded accounts: localdev123
 import { readFileSync, existsSync } from "node:fs";
 import { initializeApp } from "firebase/app";
@@ -19,6 +20,7 @@ import {
 } from "firebase/firestore";
 
 const useEmulator = process.argv.includes("--emulator");
+const staffOnly = process.argv.includes("--staff-only");
 const PASSWORD = "localdev123";
 
 function loadEnv() {
@@ -57,7 +59,9 @@ const users = [
   { key: "student1", name: "Student One", role: "student" },
   { key: "student2", name: "Student Two", role: "student" },
   { key: "student3", name: "Student Three", role: "student" },
-].map((u) => ({ ...u, email: `${u.key}@example.com` }));
+]
+  .filter((u) => !staffOnly || u.role === "staff")
+  .map((u) => ({ ...u, email: `${u.key}@example.com` }));
 
 const dateFromToday = (days) => {
   const d = new Date();
@@ -86,6 +90,11 @@ const uids = {};
 for (const user of users) {
   uids[user.key] = await ensureUser(user);
   console.log(`user ${user.email} (${user.role})`);
+}
+
+if (staffOnly) {
+  console.log(`\nDone (staff only). Password ${PASSWORD}`);
+  process.exit(0);
 }
 
 // Signed in as the last user; dev rules allow any signed-in user to write.
