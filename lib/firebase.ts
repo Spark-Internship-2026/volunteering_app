@@ -11,8 +11,16 @@ const usingEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === "true";
 // that scripts/make-staff.mjs, scripts/seed.mjs, and the rules tests hardcode —
 // the Firestore emulator runs in single-project mode and rejects a mismatched
 // project id from other clients once one has connected with a different one.
+//
+// Without any key at all (for example `npm run build` on a fresh clone), Firebase
+// throws at import time and the build fails, so use a placeholder there too. Real
+// Firebase calls fail until .env.local is filled in.
+if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !usingEmulators && typeof window !== "undefined") {
+  console.warn("NEXT_PUBLIC_FIREBASE_API_KEY is not set; Firebase is using placeholder config.");
+}
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? (usingEmulators ? "demo-api-key" : undefined),
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || (usingEmulators ? "demo-api-key" : "missing-api-key"),
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? (usingEmulators ? "volunteering-39547" : undefined),
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
