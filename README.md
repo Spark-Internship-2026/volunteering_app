@@ -24,24 +24,31 @@ This runs fully offline against local emulators, so no real Firebase keys are ne
 - **Before launch:** run `npm run rules:deploy` to redeploy the strict rules and clear test data. Every PR must list its Firestore changes (see the PR template) so strict rules can be written for them.
 - `npm run emulators:strict` runs the emulators with the strict rules.
 
-## Deploying (Cloudflare Workers)
+## Environments and deploys
 
-The app deploys to Cloudflare Workers via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare). Config lives in `wrangler.jsonc` and `open-next.config.ts`.
+| | Firebase project | Worker | How it deploys |
+|---|---|---|---|
+| Local | emulators (`npm run dev:local`) | none | your laptop |
+| PR preview | staging (`volunteering-39547`, open rules, test data) | `volunteering-app-staging`, alias `pr-<n>` | automatically per PR (`preview.yml`) |
+| Staging | staging (same project) | `volunteering-app-staging` | automatically on every merge to `main` (`deploy-staging.yml`) |
+| Production | `spark-volunteering-prod` (strict rules, real data) | `volunteering-app` | manually: Actions > "Deploy production" > Run workflow. Needs approval from a `production` environment reviewer. |
 
-```bash
-npm run preview:cf   # build and run the Worker locally (workerd) on http://localhost:8787
-npm run deploy:cf    # build and deploy to production (needs `npx wrangler login`)
-npm run upload:cf    # build and upload a new version without promoting it
-```
+- Staging URL: https://volunteering-app-staging.spark-internship-2026.workers.dev
+- Production URL: https://volunteering-app.spark-internship-2026.workers.dev
+- PR previews look like `https://pr-<n>-volunteering-app-staging.spark-internship-2026.workers.dev`.
+- Firebase web config lives in GitHub **environment** variables (`staging`, `production`); `CLOUDFLARE_API_TOKEN` is a repo secret. `NEXT_PUBLIC_FIREBASE_*` values are inlined at build time.
+- `main` is protected: CI (`check`) must pass, one approval is required, and the branch must be **up to date with `main`** before merging (use "Update branch").
+- Rollback: run "Deploy production" again with `ref` set to a previous commit or tag.
 
-`NEXT_PUBLIC_FIREBASE_*` values are inlined at **build** time, so set them as build variables in Cloudflare (not only as runtime vars).
+### Rules deploys are separate (not part of the app deploy)
+- Production (strict): `npm run rules:deploy`. Run it whenever `firestore.rules` changes, **before** promoting code that needs the change.
+- Staging (open): `npm run rules:deploy:dev`.
+- `npm run reset:cloud` wipes the **staging** database only.
+
+### Local Cloudflare preview
+`npm run preview:cf` builds and runs the Worker locally on http://localhost:8787.
 
 `next.config.ts` aliases `@firebase/firestore` to its browser build. Workers block `eval`, which the Node build of Firestore needs. Don't remove it.
 
-### PR preview URLs (GitHub Actions)
-
-- `.github/workflows/preview.yml` builds every same-repo PR, uploads a Worker **version** (never touches production) and comments a stable URL like `https://pr-<number>-volunteering-app.spark-internship-2026.workers.dev`.
-- `.github/workflows/deploy.yml` deploys `main` to production.
-- Firebase web config and the Cloudflare account id are GitHub repo **variables**. The one **secret** is `CLOUDFLARE_API_TOKEN` (Cloudflare dashboard > My Profile > API Tokens > "Edit Cloudflare Workers" template, scoped to this account). Set it with `gh secret set CLOUDFLARE_API_TOKEN --repo Spark-PNW/volunteering_app`.
-- Anyone with write access can read secrets through a workflow, so keep the token scoped to Workers only.
-- Add preview domains to Firebase Console > Authentication > Settings > Authorized domains if verification/reset emails misbehave on previews.
+### Cloudflare token
+`CLOUDFLARE_API_TOKEN` (Cloudflare dashboard > My Profile > API Tokens > "Edit Cloudflare Workers" template, scoped to this account). Anyone with write access can read secrets through a workflow, so keep it scoped to Workers only.

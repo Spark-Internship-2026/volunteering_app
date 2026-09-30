@@ -3,9 +3,10 @@
 ## Branch and PR flow
 1. Branch from `main` using your team prefix: `auth/…`, `student/…`, `events/…`, `staff/…`.
 2. Develop locally: `npm run dev:local`, then `npm run seed:emulator` for sample data.
-3. Open a PR. CI must pass (lint, build, rules tests). A bot comments a preview URL (`pr-<number>-volunteering-app…workers.dev`).
+3. Open a PR. CI must pass (lint, build, rules tests). A bot comments a preview URL (`pr-<number>-volunteering-app-staging…workers.dev`).
 4. Fill in the **Firestore changes** section of the PR template. Strict rules get written from it.
-5. One approval, then merge. Pull `main` into your branch often.
+5. One approval, then merge. `main` requires your branch to be up to date: click **Update branch** on the PR (or `git pull origin main`) whenever it says you're behind.
+6. Every merge to `main` deploys to staging automatically. Production is promoted manually by the maintainer.
 
 ## Who touches what (to limit merge conflicts)
 | Team | Mostly edits | Should avoid |

@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "volunteering-39547"
+    "default": "volunteering-39547",
+    "staging": "volunteering-39547",
+    "production": "spark-volunteering-prod"
   }
 }

@@ -1,8 +1,14 @@
 name: Deploy production
 
+# Manual promotion. Requires approval from the `production` environment reviewers.
+# Builds the chosen ref (default: main) against the PRODUCTION Firebase project.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy (branch, tag or SHA)
+        default: main
+        required: true
 
 concurrency:
   group: deploy-production
@@ -15,6 +21,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: production
     env:
       NEXT_PUBLIC_FIREBASE_API_KEY: ${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
@@ -26,6 +33,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
