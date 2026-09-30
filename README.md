@@ -120,6 +120,8 @@ Go to the **Actions** tab and find the **Deploy staging** run for your merge. Wa
 
 Only the maintainer deploys to production.
 
+---
+
 ## The guides
 
 | # | Guide | Read it when |
