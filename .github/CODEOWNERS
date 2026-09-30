@@ -1,0 +1,9 @@
+# Changes to these files need a review from the code owner.
+# Security rules decide who can read/write the database, so they always need a second look.
+/firestore.rules        @seanjlam97
+/firestore.dev.rules    @seanjlam97
+/firebase.json          @seanjlam97
+/firebase.dev.json      @seanjlam97
+/.firebaserc            @seanjlam97
+/wrangler.jsonc         @seanjlam97
+/.github/               @seanjlam97
