@@ -38,9 +38,9 @@ Run `seed:emulator` once. The emulator starts empty, so the sample accounts don'
 
 Open http://localhost:3000. The password for every account below is `localdev123`.
 
-1. **Staff creates an event.** Log in as `staff-events@example.com`, click **Events**, then create a new event. Use your GitHub username in the title (for example `[yourname] Test event`) and pick a date in the future, since signups close once an event has passed. Take **screenshot 1**: the event you created.
-2. **Student signs up.** Log out, log in as `student1@example.com`, find your event and click **Sign up**. Take **screenshot 2**: the student view showing you are signed up.
-3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 3**: the event page showing `Student One` in the roster.
+1. **Staff creates an event.** Log in as `staff-events@example.com`, click **Events**, then create a new event. Use your GitHub username in the title (for example `[yourname] Test event`) and pick a date in the future, since signups close once an event has passed.
+2. **Student signs up.** Log out, log in as `student1@example.com`, find your event and click **Sign up**. Take **screenshot 1**: the student view showing you are signed up.
+3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 2**: the event page showing `Student One` in the roster.
 
 Take screenshots with Mac `Cmd + Shift + 4` or Windows `Win + Shift + S`. Each one must show the app at localhost:3000. Press `Ctrl+C` once to stop the app.
 
@@ -57,7 +57,7 @@ git push -u origin roster/<your-github-username>
 Click **Compare & pull request**. Fill in the template:
 
 - **What this PR does:** "Adds my roster file."
-- **Proof it works:** all three screenshots from step 3. Drag the images into the box.
+- **Proof it works:** both screenshots from step 3. Drag the images into the box.
 - **Firestore changes:** write "none" in each field.
 
 ## 6. Watch the checks
