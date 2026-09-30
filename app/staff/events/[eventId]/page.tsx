@@ -1,5 +1,5 @@
-import { OpportunityDetail } from "@/components/opportunity-detail";
-import { StaffGate } from "@/components/staff-gate";
+import { OpportunityDetail } from "@/features/event-management/event-detail-page";
+import { StaffGate } from "@/features/staff-experience/staff-gate";
 
 export default async function StaffEventDetailPage({
   params,

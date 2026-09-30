@@ -1,4 +1,4 @@
-import { Dashboard } from "@/components/dashboard";
+import { Dashboard } from "@/features/staff-experience/dashboard";
 
 export default async function DashboardPage({
   searchParams,

@@ -5,7 +5,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import { NavigationLinks } from "@/components/navigation-links";
+import { NavigationLinks } from "@/shared/navigation-links";
 import { auth, db } from "@/lib/firebase";
 import { signupClosesAtForDate } from "@/lib/opportunities";
 

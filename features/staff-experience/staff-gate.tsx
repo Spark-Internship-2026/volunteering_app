@@ -6,7 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
-import { NavigationLinks } from "@/components/navigation-links";
+import { NavigationLinks } from "@/shared/navigation-links";
 import { auth, db } from "@/lib/firebase";
 
 type GateState = "loading" | "allowed" | "denied" | "error";

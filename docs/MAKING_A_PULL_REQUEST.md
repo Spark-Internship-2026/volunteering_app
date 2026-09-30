@@ -13,7 +13,7 @@ git checkout main
 git pull origin main
 ```
 
-**2. Make your own branch.** Start the name with your team's prefix (`auth/`, `student/`, `events/` or `staff/`):
+**2. Make your own branch.** Start the name with your team's prefix (`auth/`, `student/`, `events/` or `staff/`). Work mostly inside your team's folder under `features/` (see [`features/README.md`](../features/README.md)):
 
 ```bash
 git checkout -b events/add-capacity-field
@@ -94,7 +94,7 @@ Firebase does two jobs for us:
 | `signups` | One document per (student, event) pair. Its id is `<eventId>_<email>` |
 | `eventTemplates` | Reusable event templates (staff only) |
 
-The browser talks to Firestore directly, using code in `components/`. **Nothing sits in between to protect the data, so the security rules do that job.**
+The browser talks to Firestore directly, using code in the `features/` folders. **Nothing sits in between to protect the data, so the security rules do that job.**
 
 ### Security rules in plain words
 

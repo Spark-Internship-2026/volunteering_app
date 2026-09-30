@@ -1,4 +1,4 @@
-import { OpportunitySignup } from "@/components/opportunity-signup";
+import { OpportunitySignup } from "@/features/accounts/signup-page/opportunity-signup";
 
 export default async function OpportunitySignupPage({
   params,
