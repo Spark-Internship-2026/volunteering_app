@@ -224,3 +224,28 @@ describe("live capacity counter", () => {
     await assertSucceeds(authed("staff").doc("opportunities/opp-1").update({ capacity: 8, title: "Renamed" }));
   });
 });
+
+describe("guest cannot take over a real signup", () => {
+  test("a signed-out guest cannot overwrite a student's signup by reusing its id", async () => {
+    await assertFails(
+      guestDb().doc("signups/opp-1_bob@example.com").set({
+        studentId: "guest",
+        studentName: "GUEST",
+        studentEmail: "bob@example.com",
+        opportunityId: "opp-1",
+        createdAt: "attack",
+      }),
+    );
+  });
+  test("a guest can still update their own guest signup", async () => {
+    await assertSucceeds(
+      guestDb().doc("signups/opp-1_guestperson@example.com").set({
+        studentId: "guest",
+        studentName: "GUEST",
+        studentEmail: "guestperson@example.com",
+        opportunityId: "opp-1",
+        createdAt: "again",
+      }),
+    );
+  });
+});

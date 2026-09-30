@@ -1,5 +1,31 @@
 rules_version = '2';
 
+// RESTRICTED rules: what production runs while the app is still being built.
+//
+// Goal: block the things that are genuinely dangerous, and stay out of the teams' way
+// for everything else.
+//
+//   BLOCKED                                          WHY
+//   1. Changing your own role (or creating a         Anyone could make themselves staff.
+//      user as staff)
+//   2. Reading other people's user or signup         Names and emails of every volunteer.
+//      documents
+//   3. Non-staff creating, editing or deleting       Vandalism; events drive volunteer hours.
+//      events
+//   4. Overwriting or deleting someone else's        Including a signed-out visitor taking
+//      signup                                        over a real signup by reusing its id.
+//   5. Forging a signup as someone else, or          Hours credit must be trustworthy.
+//      setting check-in / completion status
+//
+//   STILL OPEN (so teams can build without editing rules):
+//   - any NEW top-level collection (signed-in users)
+//   - any new fields on events (staff) and on users (own document, except `role`)
+//   - any new fields that STAFF add to a signup (students can only write the core ones)
+//
+// Not fixable in rules: anyone can still create an account and spend read/write quota.
+// Use a Firebase budget alert, and App Check later.
+//
+// Stricter launch rules (field lists everywhere): firestore.rules.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -31,78 +57,27 @@ service cloud.firestore {
       return isStudent() || isStaff();
     }
 
-    function hasOnlyUserFields() {
-      return request.resource.data.keys().hasOnly(["name", "email", "role", "createdAt"]);
+    // Collections with their own rules below. The open catch-all skips these.
+    function isProtectedCollection(name) {
+      return name in ["users", "opportunities", "signups", "eventTemplates"];
     }
 
-    function hasOnlyOpportunityFields() {
-      return request.resource.data.keys().hasOnly([
-        "title",
-        "description",
-        "location",
-        "hours",
-        "date",
-        "wrapUpSummary",
-        "videoUrl",
-        "createdBy",
-        "createdAt",
-        "signupClosesAt",
-        "updatedAt",
-        "capacity",
-        "signupCount",
-        "templateId",
-        "seriesId",
-        "recurrence"
-      ]);
+    function verifiedEmailIs(email) {
+      return isSignedIn()
+        && request.auth.token.get("email_verified", false) == true
+        && request.auth.token.email == email;
     }
 
-    function hasOnlySignupFields() {
+    // ---- Signups ----
+    function hasOnlyStudentSignupFields() {
       return request.resource.data.keys().hasOnly([
         "studentId",
         "studentName",
         "studentEmail",
         "opportunityId",
         "createdAt",
-        "status",
-        "checkedInAt",
-        "completedAt"
+        "status"
       ]);
-    }
-
-    function hasRequiredOpportunityFields() {
-      return request.resource.data.keys().hasAll([
-        "title",
-        "hours",
-        "date",
-        "createdBy",
-        "createdAt"
-      ]);
-    }
-
-    function hasRequiredNewOpportunityFields() {
-      return hasRequiredOpportunityFields()
-        && request.resource.data.keys().hasAll(["signupClosesAt"]);
-    }
-
-    function hasValidOpportunityFields() {
-      return request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.hours is number
-        && request.resource.data.hours > 0
-        && request.resource.data.date is string
-        && request.resource.data.date.size() > 0
-        && (
-          !request.resource.data.keys().hasAny(["signupClosesAt"])
-          || request.resource.data.signupClosesAt is timestamp
-        )
-        && (
-          !request.resource.data.keys().hasAny(["capacity"])
-          || (request.resource.data.capacity is int && request.resource.data.capacity > 0)
-        )
-        && (
-          !request.resource.data.keys().hasAny(["signupCount"])
-          || (request.resource.data.signupCount is int && request.resource.data.signupCount >= 0)
-        );
     }
 
     function hasRequiredSignupFields() {
@@ -129,6 +104,17 @@ service cloud.firestore {
         && request.resource.data.opportunityId.size() > 0;
     }
 
+    function hasValidGuestSignupFields() {
+      return !isSignedIn()
+        && request.resource.data.studentId == "guest"
+        && request.resource.data.studentName == "GUEST"
+        && request.resource.data.studentEmail is string
+        && request.resource.data.studentEmail.size() > 3
+        && request.resource.data.studentEmail.size() <= 320
+        && request.resource.data.opportunityId is string
+        && request.resource.data.opportunityId.size() > 0;
+    }
+
     function signupKeepsSameEmailAndEvent() {
       return request.resource.data.studentEmail == resource.data.studentEmail
         && request.resource.data.opportunityId == resource.data.opportunityId;
@@ -149,24 +135,12 @@ service cloud.firestore {
         );
     }
 
-    function hasValidGuestSignupFields() {
-      return !isSignedIn()
-        && request.resource.data.studentId == "guest"
-        && request.resource.data.studentName == "GUEST"
-        && request.resource.data.studentEmail is string
-        && request.resource.data.studentEmail.size() > 3
-        && request.resource.data.studentEmail.size() <= 320
-        && request.resource.data.opportunityId is string
-        && request.resource.data.opportunityId.size() > 0;
-    }
-
-    // ---- Signup status (check-in / completion): staff only ----
     function validSignupStatus() {
       return !request.resource.data.keys().hasAny(["status"])
         || request.resource.data.status in ["signed_up", "checked_in", "completed"];
     }
 
-    // Students and guests may not set status fields when creating a signup.
+    // Students and guests cannot set check-in/completion when creating a signup...
     function signupStatusAbsentOnCreate() {
       return !request.resource.data.keys().hasAny(["checkedInAt", "completedAt"])
         && (
@@ -175,26 +149,19 @@ service cloud.firestore {
         );
     }
 
-    // ...and may not change them on an existing signup.
+    // ...or change it afterwards.
     function signupStatusUntouched() {
       return !request.resource.data.diff(resource.data).affectedKeys()
         .hasAny(["status", "checkedInAt", "completedAt"]);
     }
 
-    function onlySignupStatusChanges() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(["status", "checkedInAt", "completedAt"]);
-    }
-
-    // ---- Guest signups linked to an account later (verified email only) ----
-    function verifiedEmailIs(email) {
-      return isSignedIn()
-        && request.auth.token.get("email_verified", false) == true
-        && request.auth.token.email == email;
+    // Staff may change anything on a signup except who it belongs to.
+    function signupIdentityUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(["studentId", "studentName", "studentEmail", "opportunityId", "createdAt"]);
     }
 
     // ---- Live capacity counter (opportunities.signupCount) ----
-    // A signed-in user's own signup doc for an event.
     function ownSignupPath(opportunityId) {
       return /databases/$(database)/documents/signups/$(opportunityId + "_" + request.auth.token.email);
     }
@@ -223,41 +190,29 @@ service cloud.firestore {
         );
     }
 
+    // 1 + 2: users. Own document only; the role can never be changed by the user.
     match /users/{userId} {
       allow read: if isOwner(userId);
 
       allow create: if isOwner(userId)
-        && hasOnlyUserFields()
         && request.resource.data.role == "student";
 
       allow update: if isOwner(userId)
-        && hasOnlyUserFields()
         && request.resource.data.role == resource.data.role;
 
       allow delete: if false;
     }
 
+    // 3: events. Staff do everything; everyone else only bumps the capacity counter.
     match /opportunities/{opportunityId} {
       allow get: if true;
       allow list: if isSignedIn();
 
-      allow create: if isStaff()
-        && hasOnlyOpportunityFields()
-        && hasRequiredNewOpportunityFields()
-        && hasValidOpportunityFields()
-        && request.resource.data.createdBy == request.auth.uid;
+      allow create, update, delete: if isStaff();
 
-      allow update: if isStaff()
-        && hasOnlyOpportunityFields()
-        && hasRequiredOpportunityFields()
-        && hasValidOpportunityFields()
-        && request.resource.data.createdBy == resource.data.createdBy
-        && request.resource.data.createdAt == resource.data.createdAt;
-
-      // Live capacity: anyone signing up may bump the counter by exactly 1, and
-      // a signed-in user must create their own signup in the same write.
-      // Signed-out guests cannot be tied to a signup doc by rules, so their +1 is
-      // unpaired (known limitation; a server-side check is the long-term fix).
+      // Anyone signing up may add exactly 1 to the counter, and a signed-in user must
+      // create their own signup in the same write. Signed-out guests cannot be tied to
+      // a signup by rules, so their +1 is unpaired (known limitation).
       allow update: if onlySignupCountChanges()
         && (
           (
@@ -273,18 +228,18 @@ service cloud.firestore {
             && signupDeletedInSameWrite(opportunityId)
           )
         );
-
-      allow delete: if isStaff();
     }
 
-    // Reusable event templates for staff.
+    // Reusable event templates (staff only).
     match /eventTemplates/{templateId} {
       allow read, write: if isStaff();
     }
 
+    // 2, 4, 5: signups.
     match /signups/{signupId} {
+      // Create your own signup (or a guest one).
       allow create: if signupDocumentIdMatchesEmail(signupId)
-        && hasOnlySignupFields()
+        && hasOnlyStudentSignupFields()
         && hasRequiredSignupFields()
         && signupStatusAbsentOnCreate()
         && signupIsOpen()
@@ -293,22 +248,22 @@ service cloud.firestore {
           || hasValidGuestSignupFields()
         );
 
+      // Re-save your own signup. Guests may only re-save a signup that is already a
+      // guest signup, never take over a real one.
       allow update: if signupDocumentIdMatchesEmail(signupId)
-        && hasOnlySignupFields()
+        && hasOnlyStudentSignupFields()
         && hasRequiredSignupFields()
         && signupKeepsSameEmailAndEvent()
         && signupStatusUntouched()
         && signupIsOpen()
         && (
           (canUseSignedInSignup() && hasValidSignedInSignupFields())
-          // A signed-out guest may only re-save a signup that is already a guest
-          // signup, never take over a real student's one.
           || (hasValidGuestSignupFields() && resource.data.studentId == "guest")
         );
 
-      // Staff check students in / mark them complete.
+      // Staff check students in, mark them complete, or add any fields they like.
       allow update: if isStaff()
-        && onlySignupStatusChanges()
+        && signupIdentityUntouched()
         && validSignupStatus();
 
       // A verified account claims a guest signup made with the same email.
@@ -326,7 +281,7 @@ service cloud.firestore {
           || verifiedEmailIs(resource.data.studentEmail)
         );
 
-      // Students remove their own signup; staff can remove any (e.g. deleting an event).
+      // Remove your own signup; staff can remove any (for example when deleting an event).
       allow delete: if (
           canUseSignedInSignup()
           && resource.data.studentId == request.auth.uid
@@ -334,8 +289,11 @@ service cloud.firestore {
         || isStaff();
     }
 
-    match /{document=**} {
-      allow read, write: if false;
+    // Everything else: any signed-in user, so teams can add collections freely.
+    // The four collections above are excluded so they can only use their own rules
+    // (Firestore adds up every matching rule, so this must not cover them).
+    match /{collection}/{document=**} {
+      allow read, write: if isSignedIn() && !isProtectedCollection(collection);
     }
   }
 }

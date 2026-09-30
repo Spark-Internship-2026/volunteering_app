@@ -94,8 +94,9 @@ lib/
   opportunities.ts     Helpers for event data (dates, hours, sorting)
   signups.ts           Helpers for signup ids
 docs/                The three guides
-firestore.rules      Strict security rules
-firestore.dev.rules  Open security rules (staging, emulator, and production for now)
+firestore.rules            Strict security rules (the launch target)
+firestore.restricted.rules Rules for production, staging and PR previews: blocks the dangerous things
+firestore.dev.rules        Open security rules (your local emulator only)
 tests/               Tests for the security rules and the PR proof check
 scripts/             Helper scripts: seed.mjs (sample data), make-staff.mjs
 .github/             PR template, code owners, and the robots (workflows)

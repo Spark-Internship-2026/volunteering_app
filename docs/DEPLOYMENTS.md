@@ -4,7 +4,7 @@ Where the app runs, how your change goes live, and the maintainer's checklist.
 
 [Back to the README](../README.md) · Previous: [Making a pull request](MAKING_A_PULL_REQUEST.md)
 
-> **Production currently uses the OPEN rules (`firestore.dev.rules`).** Any signed-in user can read and write everything, including changing their own `role` to `staff`. This is a temporary choice while there are no real users. **Before real users arrive, run `npm run rules:deploy` to lock production down** (see the [launch checklist](#before-real-users-arrive)).
+> **Staging, PR previews and production run the RESTRICTED rules** (`firestore.restricted.rules`). They block people making themselves staff, reading other people's data, non-staff changing events, tampering with other people's signups and forging check-in status, and leave everything else open. Your laptop (`dev:local`) runs the open rules; use `npm run dev:restricted` to check against the real thing. **Before real users arrive, move production to the strict rules with `npm run rules:deploy`** (see the [launch checklist](#before-real-users-arrive)).
 
 ## Cloudflare in plain words
 
@@ -36,8 +36,8 @@ The journey of a change: your laptop, then a PR preview, then merged into `main`
 
 | Project | ID | Used by | Rules deployed now |
 |---|---|---|---|
-| Staging | `volunteering-39547` (called "volunteering" in the console) | Previews and staging. Test data only. | Open |
-| Production | `spark-volunteering-prod` | The live site | **Open (temporary)** |
+| Staging | `volunteering-39547` (called "volunteering" in the console) | Previews and staging. Test data only. | Restricted |
+| Production | `spark-volunteering-prod` | The live site | Restricted (strict rules are the launch target) |
 
 Console: https://console.firebase.google.com
 
@@ -65,9 +65,10 @@ To merge into `main`, a PR needs: the `check` and `proof` jobs to pass, **one ap
 
 | Command | Deploys | To |
 |---|---|---|
-| `npm run rules:deploy` | **Strict** `firestore.rules` | Production |
-| `npm run rules:deploy:dev` | **Open** `firestore.dev.rules` | Staging |
-| `firebase deploy --only firestore:rules --config firebase.dev.json --project production` | **Open** rules | Production (this is how it was set to open) |
+| `npm run rules:deploy:staging` | **Restricted** `firestore.restricted.rules` | Staging |
+| `npm run rules:deploy:restricted` | **Restricted** `firestore.restricted.rules` | Production (the interim rules for development) |
+| `npm run rules:deploy` | **Strict** `firestore.rules` | Production (the launch rules) |
+| `npm run rules:deploy:dev` | **Open** `firestore.dev.rules` | Staging (only when you need it, for example to seed) |
 
 The scripts point at the right project by name (`staging`, `production` in `.firebaserc`). Rules are **not** part of the normal app deploy: deploy them by hand, and deploy production rules **before** promoting code that needs them.
 
@@ -105,12 +106,12 @@ gh auth login               # GitHub CLI (optional)
 ### Making a staff user
 
 - **Emulator:** `npm run make-staff -- email`
-- **Staging:** four staff accounts exist (`staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@example.com`, password `localdev123`). Recreate them with `npm run seed:staff`.
+- **Staging:** four staff accounts exist (`staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@example.com`, password `localdev123`). They keep working under the restricted rules. To add more staff, change a user's `role` in the Firebase console (the script `npm run seed:staff` only works while staging runs the open rules).
 - **Production:** sign up in the app, then in the Firebase console open Firestore > `users` > the person's document and change `role` to `staff`. There is no in-app way yet (an invite code or admin page would be a good feature).
 
 ### Before real users arrive
 
-- [ ] **Lock production down:** `npm run rules:deploy` (strict rules). Then test the main flows on the live site, because anything that only worked under the open rules will break. Fix by extending `firestore.rules`, with a test.
+- [ ] **Move production to the strict rules:** `npm run rules:deploy` before launch (it runs the restricted rules now). Then test the main flows on the live site, because anything that only worked under the open rules will break. Fix by extending `firestore.rules`, with a test.
 - [ ] Clear test data from production (Firebase console) or start a fresh project.
 - [ ] Turn on and test email verification and password reset with real inboxes (Team 1).
 - [ ] Add every domain that sends users through email links to Firebase > Authentication > Settings > **Authorized domains**. Firebase doesn't accept wildcards, so a custom domain is easier than adding every preview address.

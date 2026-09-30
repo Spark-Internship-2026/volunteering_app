@@ -1,7 +1,15 @@
 // Idempotent seed: test users (one staff per team + students) and sample events.
-//   npm run seed:emulator   -> local emulators (start `npm run dev:local` first)
-//   npm run seed            -> the cloud project in .env.local (needs dev rules deployed)
+//
+//   npm run seed:emulator   -> local emulators (start `npm run dev:local` or
+//                              `npm run dev:restricted` first). Works under ANY rules:
+//                              documents are written with the emulator's admin access.
+//   npm run seed            -> the cloud project in .env.local. This signs in as each
+//                              user and writes normally, so it only works while that
+//                              project runs the OPEN rules. Under the restricted rules a
+//                              client cannot create staff, so promote staff in the Firebase
+//                              console instead.
 //   add --staff-only        -> only the four staff accounts (no students, events or signups)
+//
 // Shared password for all seeded accounts: localdev123
 import { readFileSync, existsSync } from "node:fs";
 import { initializeApp } from "firebase/app";
@@ -11,13 +19,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import {
-  connectFirestoreEmulator,
-  doc,
-  getFirestore,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, getFirestore, setDoc, Timestamp } from "firebase/firestore";
 
 const useEmulator = process.argv.includes("--emulator");
 const staffOnly = process.argv.includes("--staff-only");
@@ -35,10 +37,11 @@ function loadEnv() {
 }
 
 const env = loadEnv();
+const projectId = env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "volunteering-39547";
 const app = initializeApp({
   apiKey: env.NEXT_PUBLIC_FIREBASE_API_KEY || "seed",
   authDomain: env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "volunteering-39547",
+  projectId,
   appId: env.NEXT_PUBLIC_FIREBASE_APP_ID,
 });
 const auth = getAuth(app);
@@ -46,9 +49,52 @@ const db = getFirestore(app);
 
 if (useEmulator) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
 } else {
-  console.log(`Seeding CLOUD project ${app.options.projectId}`);
+  console.log(`Seeding CLOUD project ${projectId} (needs the open rules)`);
+}
+
+// A value that must be stored as a Firestore timestamp.
+const ts = (date) => ({ __timestamp: date.toISOString() });
+
+function toRestValue(value) {
+  if (value && typeof value === "object" && "__timestamp" in value) {
+    return { timestampValue: value.__timestamp };
+  }
+  if (typeof value === "string") return { stringValue: value };
+  if (typeof value === "boolean") return { booleanValue: value };
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  throw new Error(`Unsupported seed value: ${value}`);
+}
+
+function toSdkValue(value) {
+  if (value && typeof value === "object" && "__timestamp" in value) {
+    return Timestamp.fromDate(new Date(value.__timestamp));
+  }
+  return value;
+}
+
+// Write one document. Emulator: admin REST call (ignores the rules). Cloud: normal write.
+async function writeDoc(path, data) {
+  if (useEmulator) {
+    const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toRestValue(v)]));
+    const response = await fetch(
+      `http://127.0.0.1:8080/v1/projects/${projectId}/databases/(default)/documents/${path}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: "Bearer owner", "Content-Type": "application/json" },
+        body: JSON.stringify({ fields }),
+      },
+    );
+    if (!response.ok) throw new Error(`Seed write failed for ${path}: ${await response.text()}`);
+    return;
+  }
+
+  await setDoc(
+    doc(db, path),
+    Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toSdkValue(v)])),
+  );
 }
 
 const users = [
@@ -77,11 +123,11 @@ async function ensureUser(user) {
     if (error.code !== "auth/email-already-in-use") throw error;
     credential = await signInWithEmailAndPassword(auth, user.email, PASSWORD);
   }
-  await setDoc(doc(db, "users", credential.user.uid), {
+  await writeDoc(`users/${credential.user.uid}`, {
     name: user.name,
     email: user.email,
     role: user.role,
-    createdAt: Timestamp.now(),
+    createdAt: ts(new Date()),
   });
   return credential.user.uid;
 }
@@ -97,7 +143,6 @@ if (staffOnly) {
   process.exit(0);
 }
 
-// Signed in as the last user; dev rules allow any signed-in user to write.
 const events = [
   { id: "seed-food-bank", title: "Food Bank Sorting", days: 3, hours: 2, location: "Seattle" },
   { id: "seed-park-cleanup", title: "Park Cleanup", days: 7, hours: 3, location: "Green Lake" },
@@ -108,7 +153,7 @@ const events = [
 for (const event of events) {
   const date = dateFromToday(event.days);
   const [y, m, d] = date.split("-").map(Number);
-  await setDoc(doc(db, "opportunities", event.id), {
+  await writeDoc(`opportunities/${event.id}`, {
     title: event.title,
     description: "Seeded sample event",
     location: event.location,
@@ -117,8 +162,8 @@ for (const event of events) {
     wrapUpSummary: "",
     videoUrl: "",
     createdBy: uids["staff-events"],
-    createdAt: Timestamp.now(),
-    signupClosesAt: Timestamp.fromDate(new Date(y, m - 1, d + 1)),
+    createdAt: ts(new Date()),
+    signupClosesAt: ts(new Date(y, m - 1, d + 1)),
   });
   console.log(`event ${event.title} (${date})`);
 }
@@ -126,12 +171,12 @@ for (const event of events) {
 const student = users.find((u) => u.key === "student1");
 for (const event of [events[0], events[3]]) {
   const email = student.email;
-  await setDoc(doc(db, "signups", `${event.id}_${email}`), {
+  await writeDoc(`signups/${event.id}_${email}`, {
     studentId: uids.student1,
     studentName: student.name,
     studentEmail: email,
     opportunityId: event.id,
-    createdAt: Timestamp.now(),
+    createdAt: ts(new Date()),
   });
   console.log(`signup ${email} -> ${event.title}`);
 }
