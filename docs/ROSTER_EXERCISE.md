@@ -34,12 +34,15 @@ In a second terminal, add the sample accounts:
 npm run seed:emulator
 ```
 
-Open http://localhost:3000 and take two screenshots (Mac: `Cmd + Shift + 4`, Windows: `Win + Shift + S`). You need both for your PR:
+Run `seed:emulator` once. The emulator starts empty, so the sample accounts don't exist until you do, and they come back on later runs because your data is saved.
 
-1. **Staff:** log in as `staff-events@example.com` (password `localdev123`) and screenshot the app.
-2. **Student:** log out, log in as `student1@example.com` (password `localdev123`) and screenshot the app.
+Open http://localhost:3000. The password for every account below is `localdev123`.
 
-Each screenshot must show the app running at localhost:3000 while you're logged in. Press `Ctrl+C` once to stop the app.
+1. **Staff creates an event.** Log in as `staff-events@example.com`, click **Events**, then create a new event. Use your GitHub username in the title (for example `[yourname] Test event`) and pick a date in the future, since signups close once an event has passed. Take **screenshot 1**: the event you created.
+2. **Student signs up.** Log out, log in as `student1@example.com`, find your event and click **Sign up**. Take **screenshot 2**: the student view showing you are signed up.
+3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 3**: the event page showing `Student One` in the roster.
+
+Take screenshots with Mac `Cmd + Shift + 4` or Windows `Win + Shift + S`. Each one must show the app at localhost:3000. Press `Ctrl+C` once to stop the app.
 
 ## 4. Save and upload
 
@@ -54,7 +57,7 @@ git push -u origin roster/<your-github-username>
 Click **Compare & pull request**. Fill in the template:
 
 - **What this PR does:** "Adds my roster file."
-- **Proof it works:** both screenshots, the staff login and the student login, showing the app running locally at localhost:3000. Drag the images into the box.
+- **Proof it works:** all three screenshots from step 3. Drag the images into the box.
 - **Firestore changes:** write "none" in each field.
 
 ## 6. Watch the checks
