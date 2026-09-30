@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "rules:test": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\"",
-    "rules:deploy": "firebase deploy --only firestore:rules",
+    "rules:deploy": "firebase deploy --only firestore:rules --project production",
     "make-staff": "node scripts/make-staff.mjs",
     "emulators": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:start --config firebase.dev.json --only auth,firestore --import=.emulator-data --export-on-exit",
     "dev:local": "concurrently -k -n emu,next \"npm:emulators\" \"wait-on -t 60000 tcp:9099 tcp:8080 && NEXT_PUBLIC_USE_EMULATORS=true next dev\"",
@@ -17,10 +17,10 @@
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload:cf": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "emulators:strict": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:start --config firebase.json --only auth,firestore --import=.emulator-data --export-on-exit",
-    "rules:deploy:dev": "firebase deploy --only firestore:rules --config firebase.dev.json",
+    "rules:deploy:dev": "firebase deploy --only firestore:rules --config firebase.dev.json --project staging",
     "seed": "node scripts/seed.mjs",
     "seed:emulator": "node scripts/seed.mjs --emulator",
-    "reset:cloud": "firebase firestore:delete --all-collections --force",
+    "reset:cloud": "firebase firestore:delete --all-collections --force --project staging",
     "seed:staff": "node scripts/seed.mjs --staff-only"
   },
   "dependencies": {

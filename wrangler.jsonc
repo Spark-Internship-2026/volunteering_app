@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // Top level = PRODUCTION Worker. `--env staging` = the staging Worker (also used for PR previews).
   "name": "volunteering-app",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
@@ -10,5 +11,20 @@
   },
   "workers_dev": true,
   "preview_urls": true,
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "volunteering-app-staging",
+      "main": ".open-next/worker.js",
+      "compatibility_date": "2026-09-01",
+      "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+      "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS"
+      },
+      "workers_dev": true,
+      "preview_urls": true,
+      "observability": { "enabled": true }
+    }
+  }
 }

@@ -17,6 +17,8 @@ jobs:
   preview:
     # Fork PRs don't get secrets, so only build previews for same-repo branches.
     if: github.event.pull_request.head.repo.full_name == github.repository
+    # Previews build against the STAGING Firebase project and upload to the staging Worker.
+    environment: staging
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -39,7 +41,7 @@ jobs:
       - run: npx opennextjs-cloudflare build
       - name: Upload preview version
         run: >
-          npx wrangler versions upload
+          npx wrangler versions upload --env staging
           --preview-alias pr-${{ github.event.pull_request.number }}
           --message "PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.head.sha }}"
       - name: Comment preview URL on the PR
