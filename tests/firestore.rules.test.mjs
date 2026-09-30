@@ -506,10 +506,10 @@ describe("signups", () => {
     await assertSucceeds(staff.doc("signups/opp-1_staff@example.com").delete());
   });
 
-  test("staff cannot delete a student's signup", async () => {
+  test("staff can delete a student's signup (needed when deleting an event)", async () => {
     const staff = authedDb("staff");
 
-    await assertFails(staff.doc("signups/opp-1_alice@example.com").delete());
+    await assertSucceeds(staff.doc("signups/opp-1_alice@example.com").delete());
   });
 
   test("staff can read all signups", async () => {
