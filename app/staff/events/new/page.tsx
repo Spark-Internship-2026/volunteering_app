@@ -1,5 +1,5 @@
-import { CreateOpportunityForm } from "@/components/create-opportunity-form";
-import { StaffGate } from "@/components/staff-gate";
+import { CreateOpportunityForm } from "@/features/event-management/create-event-form";
+import { StaffGate } from "@/features/staff-experience/staff-gate";
 
 export default function NewEventPage() {
   return (

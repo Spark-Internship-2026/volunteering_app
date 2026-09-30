@@ -1,5 +1,5 @@
-import { StaffOpportunitiesList } from "@/components/staff-opportunities-list";
-import { StaffGate } from "@/components/staff-gate";
+import { StaffOpportunitiesList } from "@/features/staff-experience/staff-opportunities-list";
+import { StaffGate } from "@/features/staff-experience/staff-gate";
 
 export default function NewNotesPage() {
   return (

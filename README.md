@@ -64,7 +64,7 @@ Three services work together. You only ever edit the code in this repository.
 | **Merge** | Adding an approved branch into `main`. |
 | **`main`** | The branch that holds the shared, working code. |
 | **Node.js / npm** | Node runs JavaScript on your computer. npm installs libraries and runs the project's commands (`npm run ...`). |
-| **Component** | A reusable piece of a page, like a form or a list. Lives in `components/`. |
+| **Component** | A reusable piece of a page, like a form or a list. Lives in a team's folder under `features/`. |
 | **Authentication (Auth)** | Logging in: proving who you are. |
 | **Firestore** | Firebase's database. Data is stored as **documents** (like a form with named fields) inside **collections** (like folders). |
 | **Security rules** | A file (`firestore.rules`) that says who may read or write which documents. |
@@ -78,14 +78,20 @@ Three services work together. You only ever edit the code in this repository.
 ## A tour of the code
 
 ```
-app/                 The pages. Each folder is a web address.
+app/                 The pages. Each folder is a web address. These files are tiny:
+                       they just pick a feature to show.
   login/, signup/      /login, /signup
   dashboard/           /dashboard (the home screen after login)
   staff/               /staff/... pages that only staff can use
-components/          The building blocks used by pages (forms, lists, buttons)
+features/            The real code, one folder per team (see features/README.md)
+  accounts/            Account & Authentication
+  student-experience/  Student Volunteer Experience
+  event-management/    Event Management
+  staff-experience/    Staff Experience
+shared/              Small pieces used by several teams (navigation links, types)
 lib/
   firebase.ts          Connects the app to Firebase (and to the emulators locally)
-  opportunities.ts     Helpers for event data (dates, hours)
+  opportunities.ts     Helpers for event data (dates, hours, sorting)
   signups.ts           Helpers for signup ids
 docs/                The three guides
 firestore.rules      Strict security rules
@@ -99,13 +105,13 @@ next.config.ts       Next.js settings
 
 An **"opportunity"** in the code is a volunteering **event**. A **"signup"** is one student signing up for one event.
 
-**Where each team mostly works** (to avoid stepping on each other):
+**Where each team works.** Each team owns one folder under `features/`. Read [`features/README.md`](features/README.md) for the file-by-file map.
 
-| Team | Branch prefix | Mostly edits |
+| Team | Branch prefix | Folder |
 |---|---|---|
-| Account & Authentication | `auth/` | `components/auth-form.tsx`, `app/login`, `app/signup`, guest-linking inside `components/opportunity-signup.tsx` |
-| Student Volunteer Experience | `student/` | `components/dashboard.tsx`, `components/student-opportunities-list.tsx` |
-| Event Management | `events/` | `components/create-opportunity-form.tsx`, new template and recurrence files, capacity in `components/opportunity-signup.tsx` |
-| Staff Experience | `staff/` | `components/staff-opportunities-list.tsx`, `components/navigation-links.tsx`, `components/staff-gate.tsx` |
+| Account & Authentication | `auth/` | `features/accounts/` |
+| Student Volunteer Experience | `student/` | `features/student-experience/` |
+| Event Management | `events/` | `features/event-management/` |
+| Staff Experience | `staff/` | `features/staff-experience/` |
 
-`components/opportunity-detail.tsx` is big and shared by several teams. **Put new UI in a new component file** and import it there, so you only make a small edit to the shared file. That prevents most merge conflicts.
+The big pages (the staff event page and the public signup page) are **built from sections**, and each section is its own file owned by one team. **Add new UI as a new file in your own folder** and add one line to the page, instead of growing a file other teams also edit. That prevents most merge conflicts.

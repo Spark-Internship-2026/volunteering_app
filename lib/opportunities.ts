@@ -30,6 +30,20 @@ export function opportunityFromData(
   };
 }
 
+export function sortOpportunitiesByDate(opportunities: Opportunity[]) {
+  return [...opportunities].sort((first, second) => {
+    if (!first.date) {
+      return 1;
+    }
+
+    if (!second.date) {
+      return -1;
+    }
+
+    return first.date.localeCompare(second.date);
+  });
+}
+
 export function formatOpportunityDate(date: string) {
   if (!date) {
     return "No date";

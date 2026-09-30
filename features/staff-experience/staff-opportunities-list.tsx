@@ -5,16 +5,16 @@ import { collection, getDocs } from "firebase/firestore";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { NavigationLinks } from "@/components/navigation-links";
+import { StaffEventGrid } from "@/features/staff-experience/staff-event-grid";
+import { db } from "@/lib/firebase";
 import {
-  formatHours,
-  formatOpportunityDate,
   getLocalDateKey,
   isOpportunityPast,
   opportunityFromData,
+  sortOpportunitiesByDate,
   type Opportunity,
 } from "@/lib/opportunities";
-import { db } from "@/lib/firebase";
+import { NavigationLinks } from "@/shared/navigation-links";
 
 type ListMode = "opportunities" | "notes";
 
@@ -29,20 +29,6 @@ function opportunitiesErrorMessage(error: unknown) {
   }
 
   return "Could not load events. Please refresh and try again.";
-}
-
-function sortOpportunities(opportunities: Opportunity[]) {
-  return [...opportunities].sort((first, second) => {
-    if (!first.date) {
-      return 1;
-    }
-
-    if (!second.date) {
-      return -1;
-    }
-
-    return first.date.localeCompare(second.date);
-  });
 }
 
 export function StaffOpportunitiesList({
@@ -61,7 +47,7 @@ export function StaffOpportunitiesList({
     async function loadOpportunities() {
       try {
         const snapshot = await getDocs(collection(db, "opportunities"));
-        const loadedOpportunities = sortOpportunities(
+        const loadedOpportunities = sortOpportunitiesByDate(
           snapshot.docs.map((opportunityDoc) =>
             opportunityFromData(opportunityDoc.id, opportunityDoc.data()),
           ),
@@ -104,53 +90,6 @@ export function StaffOpportunitiesList({
   const pastOpportunities = opportunities.filter((opportunity) =>
     isOpportunityPast(opportunity.date, todayDateKey),
   );
-
-  function renderOpportunityGrid(opportunitiesToRender: Opportunity[]) {
-    return (
-      <div className="grid gap-3 sm:grid-cols-2">
-        {opportunitiesToRender.map((opportunity) => (
-          <Link
-            className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
-            href={`/staff/events/${opportunity.id}${
-              isNotesMode ? "#notes" : ""
-            }`}
-            key={opportunity.id}
-          >
-            <article className="flex h-full flex-col justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold">{opportunity.title}</h3>
-                <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
-                  <div>
-                    <dt className="sr-only">Date</dt>
-                    <dd>{formatOpportunityDate(opportunity.date)}</dd>
-                  </div>
-                  <div>
-                    <dt className="sr-only">Hours</dt>
-                    <dd>{formatHours(opportunity.hours)}</dd>
-                  </div>
-                  {opportunity.location ? (
-                    <div>
-                      <dt className="sr-only">Location</dt>
-                      <dd>{opportunity.location}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-                {opportunity.description ? (
-                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-600">
-                    {opportunity.description}
-                  </p>
-                ) : null}
-              </div>
-
-              <p className="text-sm font-medium text-blue-700">
-                {isNotesMode ? "Edit notes" : "View details"}
-              </p>
-            </article>
-          </Link>
-        ))}
-      </div>
-    );
-  }
 
   const content = (
     <section className={embedded ? "mt-6" : "mx-auto w-full max-w-4xl"}>
@@ -217,7 +156,10 @@ export function StaffOpportunitiesList({
               No available events right now.
             </p>
           ) : (
-            renderOpportunityGrid(activeOpportunities)
+            <StaffEventGrid
+              isNotesMode={isNotesMode}
+              opportunities={activeOpportunities}
+            />
           )}
 
           <h3 className="mb-3 mt-8 text-base font-semibold">Past Events</h3>
@@ -226,7 +168,10 @@ export function StaffOpportunitiesList({
               No past events yet.
             </p>
           ) : (
-            renderOpportunityGrid(pastOpportunities)
+            <StaffEventGrid
+              isNotesMode={isNotesMode}
+              opportunities={pastOpportunities}
+            />
           )}
         </>
       ) : null}
