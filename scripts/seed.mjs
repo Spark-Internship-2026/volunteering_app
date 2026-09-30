@@ -144,10 +144,10 @@ if (staffOnly) {
 }
 
 const events = [
-  { id: "seed-food-bank", title: "Food Bank Sorting", days: 3, hours: 2, location: "Seattle" },
-  { id: "seed-park-cleanup", title: "Park Cleanup", days: 7, hours: 3, location: "Green Lake" },
-  { id: "seed-tutoring", title: "After-School Tutoring", days: 14, hours: 1.5, location: "Library" },
-  { id: "seed-past-event", title: "Past Event (Winter Coat Drive)", days: -10, hours: 2, location: "Community Center" },
+  { id: "seed-food-bank", title: "Cozy for a Cause", days: 3, hours: 2, location: "Seattle" },
+  { id: "seed-park-cleanup", title: "Crafts for a Cause", days: 7, hours: 3, location: "Green Lake" },
+  { id: "seed-tutoring", title: "Elderly Care Home", days: 14, hours: 1.5, location: "Library" },
+  { id: "seed-past-event", title: "Serving the Unhoused", days: 21, hours: 2, location: "Community Center" },
 ];
 
 for (const event of events) {
