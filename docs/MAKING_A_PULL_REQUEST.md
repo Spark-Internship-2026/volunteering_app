@@ -196,8 +196,23 @@ AI tools are good at this project, and they make mistakes. Some habits help:
 - **For permission errors, share `firestore.rules`.** The bug is usually there, not in the component.
 - **Ask it to explain before it changes.** "What does this file do?" then "Where should this change go?"
 - **Run it.** Test the change in the browser, then run `npm run lint` and `npm run build`. Don't merge code you haven't seen work. Your proof is the evidence.
-- **Keep changes small.** Ask for one thing at a time. Big AI rewrites of shared files (like `opportunity-detail.tsx`) cause merge conflicts.
+- **Keep changes small.** Ask for one thing at a time. Big AI rewrites of shared files (like `features/event-management/event-detail-page.tsx`) cause merge conflicts.
 - **Read what it wrote** before committing. You are responsible for it.
 - The Next.js in this repo is a very new version. If the AI suggests something that doesn't work, tell it the exact error. The docs for this version are inside `node_modules/next/dist/docs/`.
+
+### Guardrails for AI tools, and the shared quota
+
+The repo has an `AGENTS.md` file with rules for AI assistants (Claude Code, Cursor, Copilot and others read it automatically). **If your assistant seems to ignore it, paste this into the chat: "Read AGENTS.md and follow it."** The short version:
+
+- **Work on the emulators** (`npm run dev:local` or `npm run dev:restricted`), not on staging or production. Never point `.env.local` at production.
+- **The AI must not** deploy, run `reset:cloud`, log in to Firebase or Cloudflare, force-push, push to `main`, or edit the rules, `firebase*.json`, `wrangler.jsonc` or `.github/`. If it says it needs to, stop and ask the maintainer.
+- **"Permission denied" is not fixed by loosening the rules.** Reproduce it with `npm run dev:restricted` (see above).
+
+**Why the quota matters.** Staging is one Firebase project shared by everyone, and the free plan allows only 50,000 reads a day. A bug such as a `useEffect` that re-subscribes in a loop can use all of it in minutes, and then every teammate's preview stops working until the next day (midnight Pacific). AI-written code makes this mistake easily. Before you open a PR:
+
+1. Every `onSnapshot` must return its unsubscribe function from the effect cleanup.
+2. Effects must not depend on objects, arrays or functions created during render.
+3. Don't read inside loops, timers or on every keystroke, and don't read a whole collection when you need a few documents (use a query with `limit()`).
+4. Open each page you changed once on the emulator and look at the terminal or the emulator log. If you see the same request repeating, fix it before you push.
 
 Next: [Deployments](DEPLOYMENTS.md)

@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin HEAD:main*)",
+      "Bash(gh secret *)",
+      "Bash(gh variable *)",
+      "Bash(gh repo delete*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)"
+    ],
+    "ask": [
+      "Bash(firebase deploy*)",
+      "Bash(npx firebase deploy*)",
+      "Bash(firebase login*)",
+      "Bash(npx firebase login*)",
+      "Bash(firebase firestore:delete*)",
+      "Bash(npx firebase firestore:delete*)",
+      "Bash(npm run rules:deploy*)",
+      "Bash(npm run reset:cloud*)",
+      "Bash(npm run seed)",
+      "Bash(npm run seed:staff*)",
+      "Bash(wrangler *)",
+      "Bash(npx wrangler *)",
+      "Bash(npm run deploy:cf*)",
+      "Bash(npm run upload:cf*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh workflow run*)",
+      "Bash(git reset --hard*)",
+      "Edit(firestore*.rules)",
+      "Edit(firebase*.json)",
+      "Edit(.firebaserc)",
+      "Edit(wrangler.jsonc)",
+      "Edit(open-next.config.ts)",
+      "Edit(.github/**)",
+      "Edit(AGENTS.md)",
+      "Edit(CLAUDE.md)",
+      "Edit(.claude/**)"
+    ]
+  }
+}
