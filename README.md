@@ -80,11 +80,11 @@ npm run seed:emulator
 
 Run `seed:emulator` once. The emulator starts empty, so the sample accounts don't exist until you do, and they come back on later runs because your data is saved.
 
-Open http://localhost:3000. The password for every account below is `localdev123`.
+Open http://localhost:3000. The staff account's password is `localdev123`.
 
 1. **Staff creates an event.** Log in as `staff-events@example.com`, click **Events**, then create a new event. Use your GitHub username in the title (for example `[yourname] Test event`) and pick a date in the future, since signups close once an event has passed.
-2. **Student signs up.** Log out, log in as `student1@example.com`, find your event and click **Sign up**. Take **screenshot 1**: the student view showing you are signed up.
-3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 2**: the event page showing `Student One` in the roster.
+2. **Student signs up.** Log out, click **Sign up** to make your own student account (use your own name, any email like `you@example.com`, and any password), find your event and click **Sign up** on it. Take **screenshot 1**: the student view showing you are signed up.
+3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 2**: the event page showing your student account's name in the roster.
 
 Take screenshots with Mac `Cmd + Shift + 4` or Windows `Win + Shift + S`. Each one must show the app at localhost:3000. Press `Ctrl+C` once to stop the app.
 
@@ -127,16 +127,6 @@ Only the maintainer deploys to production.
 | 1 | **[SETUP](docs/SETUP.md)** | You are installing tools and running the app on your laptop for the first time. Also the place to look when something breaks. |
 | 2 | **[MAKING A PULL REQUEST](docs/MAKING_A_PULL_REQUEST.md)** | You are about to change the code. Covers branches, proof that it works, review, security rules and using AI tools. |
 | 3 | **[DEPLOYMENTS](docs/DEPLOYMENTS.md)** | You want to know where the app runs, how changes go live, or you are the maintainer. |
-
-**Fastest start** (after installing Git, Node and Java, see SETUP):
-
-```bash
-git clone https://github.com/Spark-PNW/volunteering_app
-cd volunteering_app
-npm install
-npm run dev:local        # then open http://localhost:3000
-npm run seed:emulator    # in a second terminal: adds sample accounts and events
-```
 
 ## The big picture
 
