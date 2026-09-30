@@ -6,6 +6,7 @@
 //     .png .jpg .jpeg .gif .webp .mp4 .mov .webm link            (preferred)
 //   - OR a fenced code block with real output (at least 40 characters), for changes
 //     with nothing to look at (rules, scripts, config)
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const SECTION = /^##\s+Proof it works\s*$/im;
@@ -40,7 +41,10 @@ export function checkProof(body = "") {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const result = checkProof(process.env.PR_BODY ?? "");
+  const body = process.env.PR_BODY_FILE
+    ? readFileSync(process.env.PR_BODY_FILE, "utf8")
+    : (process.env.PR_BODY ?? "");
+  const result = checkProof(body);
   if (result.ok) {
     console.log(`Proof found (${result.kind}).`);
   } else {
