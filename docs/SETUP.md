@@ -96,7 +96,8 @@ Run these from the project folder.
 |---|---|
 | `npm install` | Installs the libraries. Run after cloning and whenever `package.json` changes on `main`. |
 | `npm run dev:local` | **Main command.** Emulators + app at http://localhost:3000 |
-| `npm run seed:emulator` | Adds sample users and events to the emulators (run while `dev:local` is running) |
+| `npm run dev:restricted` | Same as `dev:local`, but the emulators enforce the **restricted** rules that staging and production use. Use it to check that your change is allowed. |
+| `npm run seed:emulator` | Adds sample users and events to the emulators (run while they are running; works with either rules) |
 | `npm run make-staff -- you@example.com` | Makes an existing emulator user staff |
 | `npm run emulators:strict` | Emulators with the strict rules (see the PR guide) |
 | `npm run lint` | Checks for code mistakes |
@@ -104,10 +105,12 @@ Run these from the project folder.
 | `npm run rules:test` | Tests the security rules |
 | `npm run preview:cf` | Runs the Cloudflare version locally at http://localhost:8787 |
 | `npm run dev` | App only, using `.env.local` (real Firebase, be careful) |
-| `npm run rules:deploy` | **Maintainer.** Publishes the strict rules to production |
-| `npm run rules:deploy:dev` | **Maintainer.** Publishes the open rules to staging |
-| `npm run seed:staff` | **Maintainer.** Creates the four staff accounts on staging |
-| `npm run reset:cloud` | **Maintainer.** Deletes all staging data. Careful! |
+| `npm run rules:deploy:staging` | **Maintainer.** Publishes the restricted rules to staging |
+| `npm run rules:deploy:restricted` | **Maintainer.** Publishes the restricted rules to production |
+| `npm run rules:deploy` | **Maintainer.** Publishes the strict (launch) rules to production |
+| `npm run rules:deploy:dev` | **Maintainer.** Publishes the open rules to staging (only if you need them, for example to seed) |
+| `npm run seed:staff` | **Maintainer.** Creates the four staff accounts on staging. Only works while staging runs the open rules. |
+| `npm run reset:cloud` | **Maintainer.** Deletes the events, signups and templates on staging (keeps users). Careful! |
 
 ## When something breaks
 

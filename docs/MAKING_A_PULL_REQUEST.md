@@ -112,24 +112,24 @@ That message does not say which rule refused. This is the most common "bug" you 
 
 | Rules file | What it does | Used by |
 |---|---|---|
-| `firestore.dev.rules` | **Open.** Any signed-in user can do anything. | Your laptop, staging and PR previews |
-| `firestore.restricted.rules` | **Restricted.** Blocks the dangerous things (see below), open for everything else. | **Production** (once deployed, see [Deployments](DEPLOYMENTS.md)) |
+| `firestore.dev.rules` | **Open.** Any signed-in user can do anything. | Your laptop (`npm run dev:local`) |
+| `firestore.restricted.rules` | **Restricted.** Blocks the dangerous things (see below), open for everything else. | **Staging, PR previews and production** (see [Deployments](DEPLOYMENTS.md)) |
 | `firestore.rules` | **Strict.** Field lists and role checks on every collection. | Nowhere in the cloud right now. It is the target for launch. |
 
-Staging and your laptop run the open rules, so most permission errors will not happen there. **That also means a change can work everywhere today and be blocked later, when production goes back to the strict rules.** So your PR must list every new field and who writes it (the template asks). The maintainer uses that list to keep the strict rules ready.
-
-To test against the strict rules on your laptop, use two terminals instead of `dev:local`:
+Your laptop runs the open rules, but **staging, your PR preview and production run the restricted rules**. So a change can work on your laptop and still get "permission denied" on the preview. Check before you push:
 
 ```bash
-npm run emulators:strict                     # terminal 1: emulators with the strict rules
-NEXT_PUBLIC_USE_EMULATORS=true npx next dev  # terminal 2: the app
+npm run dev:restricted      # like dev:local, but the emulators enforce the restricted rules
+npm run seed:emulator       # in a second terminal, for sample data
 ```
 
-Then seed sample data with `npm run seed:emulator`. That script needs open rules, so seed first under `dev:local`, stop it, then start the strict emulators (your data is kept in `.emulator-data/`).
+If it works there, it will work on the preview. The table below lists what the restricted rules block. Your PR must also list every new field and who writes it (the template asks), so the maintainer can keep the strict launch rules ready.
 
-### What the restricted (production) rules block
+To try the strict launch rules instead, run `npm run emulators:strict` in one terminal and `NEXT_PUBLIC_USE_EMULATORS=true npx next dev` in another (your data is kept in `.emulator-data/`).
 
-Production runs rules that block a short list of dangerous things and leave the rest open, so you can build without editing rules. Try these on the emulator with `npm run emulators:restricted` if a feature depends on them.
+### What the restricted rules block (staging, previews, production)
+
+These rules block a short list of dangerous things and leave the rest open, so you can build without editing rules. If a feature hits one of them you will see "permission denied" on the preview; reproduce it locally with `npm run dev:restricted`.
 
 | Blocked | In plain words |
 |---|---|

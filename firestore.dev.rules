@@ -1,10 +1,10 @@
 rules_version = '2';
 
-// DEV / SHARED-TEST RULES. Wide open on purpose so teams can add fields and
-// collections without editing rules while building features.
+// LOCAL EMULATOR RULES. Wide open on purpose so the fast local loop (`npm run dev:local`)
+// never gets in the way. Staging, PR previews and production run
+// firestore.restricted.rules instead, so check with `npm run dev:restricted`.
 //
-// NEVER deploy this to a project holding real user data. Before launch,
-// redeploy the strict rules: `npm run rules:deploy` (uses firestore.rules).
+// NEVER deploy this to a project holding real user data.
 service cloud.firestore {
   match /databases/{database}/documents {
     // Signed-in users can read and write everything (including their own role).

@@ -15,8 +15,9 @@ in a code block instead.
 
 
 ## Firestore changes (required, even if "none")
-Staging and the emulator use open rules, so a change can work there and still be blocked
-in production if the strict rules do not allow it. List everything so nothing is missed:
+Your laptop (`dev:local`) uses open rules, but staging, previews and production use the restricted rules,
+so a change can work locally and still get "permission denied" on the preview. Check with
+`npm run dev:restricted`, and list everything so nothing is missed:
 
 - **New or changed collections:**
 - **New fields (collection.field, type):**
