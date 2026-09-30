@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,3 +15,13 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+if (process.env.NEXT_PUBLIC_USE_EMULATORS === "true") {
+  const globalWithEmulators = globalThis as { __firebaseEmulatorsConnected?: boolean };
+
+  if (!globalWithEmulators.__firebaseEmulatorsConnected) {
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    connectFirestoreEmulator(db, "127.0.0.1", 8080);
+    globalWithEmulators.__firebaseEmulatorsConnected = true;
+  }
+}

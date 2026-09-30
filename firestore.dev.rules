@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// DEV / SHARED-TEST RULES. Wide open on purpose so teams can add fields and
+// collections without editing rules while building features.
+//
+// NEVER deploy this to a project holding real user data. Before launch,
+// redeploy the strict rules: `npm run rules:deploy` (uses firestore.rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Signed-in users can read and write everything (including their own role).
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Signed-out visitors: view a single event (QR link) and guest signup.
+    match /opportunities/{opportunityId} {
+      allow get: if true;
+    }
+
+    match /signups/{signupId} {
+      allow create, update: if request.auth == null
+        && request.resource.data.studentId == "guest"
+        && request.resource.data.studentEmail is string
+        && request.resource.data.studentEmail.size() > 3
+        && request.resource.data.opportunityId is string;
+    }
+  }
+}
