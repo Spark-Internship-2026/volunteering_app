@@ -21,7 +21,9 @@
     "seed": "node scripts/seed.mjs",
     "seed:emulator": "node scripts/seed.mjs --emulator",
     "reset:cloud": "firebase firestore:delete --all-collections --force --project staging",
-    "seed:staff": "node scripts/seed.mjs --staff-only"
+    "seed:staff": "node scripts/seed.mjs --staff-only",
+    "rules:deploy:restricted": "firebase deploy --only firestore:rules --config firebase.restricted.json --project production",
+    "emulators:restricted": "PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH firebase emulators:start --config firebase.restricted.json --only auth,firestore --import=.emulator-data --export-on-exit"
   },
   "dependencies": {
     "firebase": "^12.17.1",

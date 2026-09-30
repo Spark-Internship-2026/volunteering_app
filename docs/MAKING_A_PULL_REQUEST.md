@@ -78,7 +78,7 @@ After you open a PR, look at the bottom of the page:
 
 The preview uses the shared **staging** database. Use fake data with your team in the name (`[Events] Test event`).
 
-**Code owners:** files that control security and deployment (`firestore.rules`, `firestore.dev.rules`, `firebase*.json`, `wrangler.jsonc`, everything in `.github/`) need a review from the code owner, `@seanjlam97`. GitHub adds them automatically.
+**Code owners:** files that control security and deployment (`firestore.rules`, `firestore.restricted.rules`, `firestore.dev.rules`, `firebase*.json`, `wrangler.jsonc`, everything in `.github/`) need a review from the code owner, `@seanjlam97`. GitHub adds them automatically.
 
 ## Firebase and the security rules
 
@@ -112,10 +112,11 @@ That message does not say which rule refused. This is the most common "bug" you 
 
 | Rules file | What it does | Used by |
 |---|---|---|
-| `firestore.dev.rules` | **Open.** Any signed-in user can do anything. | Your laptop, staging, PR previews, and **production for now** |
-| `firestore.rules` | **Strict.** Field lists and role checks. | Nowhere in the cloud right now. It is the target for launch. |
+| `firestore.dev.rules` | **Open.** Any signed-in user can do anything. | Your laptop, staging and PR previews |
+| `firestore.restricted.rules` | **Restricted.** Blocks the dangerous things (see below), open for everything else. | **Production** (once deployed, see [Deployments](DEPLOYMENTS.md)) |
+| `firestore.rules` | **Strict.** Field lists and role checks on every collection. | Nowhere in the cloud right now. It is the target for launch. |
 
-Because everything runs on the open rules today, most permission errors will not happen. **That also means a change can work everywhere today and be blocked later, when production goes back to the strict rules.** So your PR must list every new field and who writes it (the template asks). The maintainer uses that list to keep the strict rules ready.
+Staging and your laptop run the open rules, so most permission errors will not happen there. **That also means a change can work everywhere today and be blocked later, when production goes back to the strict rules.** So your PR must list every new field and who writes it (the template asks). The maintainer uses that list to keep the strict rules ready.
 
 To test against the strict rules on your laptop, use two terminals instead of `dev:local`:
 
@@ -125,6 +126,20 @@ NEXT_PUBLIC_USE_EMULATORS=true npx next dev  # terminal 2: the app
 ```
 
 Then seed sample data with `npm run seed:emulator`. That script needs open rules, so seed first under `dev:local`, stop it, then start the strict emulators (your data is kept in `.emulator-data/`).
+
+### What the restricted (production) rules block
+
+Production runs rules that block a short list of dangerous things and leave the rest open, so you can build without editing rules. Try these on the emulator with `npm run emulators:restricted` if a feature depends on them.
+
+| Blocked | In plain words |
+|---|---|
+| Changing your own `role` | Nobody can make themselves staff. Staff are made in the Firebase console. |
+| Reading other people's data | You can read only your own user document and your own signups. Staff can read all signups. |
+| Changing events | Only staff create, edit or delete events. Students may only bump the capacity counter (see the capacity example). |
+| Touching someone else's signup | You can only create, change or delete your own. A signed-out guest can only re-save an existing *guest* signup. |
+| Forging hours credit | Students and guests cannot set `status`, `checkedInAt` or `completedAt`, or add extra fields to a signup. Staff can. |
+
+Still open: any **new top-level collection** (any signed-in user), any new fields on events (staff) and on your own user document (except `role`), and any new fields that staff add to a signup. Subcollections under `users`, `opportunities`, `signups` and `eventTemplates` are **not** open: use a new top-level collection instead.
 
 ### What the strict rules already allow
 

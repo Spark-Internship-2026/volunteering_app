@@ -4,7 +4,7 @@ Where the app runs, how your change goes live, and the maintainer's checklist.
 
 [Back to the README](../README.md) · Previous: [Making a pull request](MAKING_A_PULL_REQUEST.md)
 
-> **Production currently uses the OPEN rules (`firestore.dev.rules`).** Any signed-in user can read and write everything, including changing their own `role` to `staff`. This is a temporary choice while there are no real users. **Before real users arrive, run `npm run rules:deploy` to lock production down** (see the [launch checklist](#before-real-users-arrive)).
+> **Production currently uses the OPEN rules (`firestore.dev.rules`).** Any signed-in user can read and write everything, including changing their own `role` to `staff`. **Restricted rules are written and tested (`firestore.restricted.rules`) but not deployed yet.** Deploy them with `npm run rules:deploy:restricted`: they block self-promotion to staff, reading other people's data, non-staff changing events, tampering with other people's signups and forging check-in status, and leave everything else open. **Before real users arrive, also move to the strict rules with `npm run rules:deploy`** (see the [launch checklist](#before-real-users-arrive)).
 
 ## Cloudflare in plain words
 
@@ -37,7 +37,7 @@ The journey of a change: your laptop, then a PR preview, then merged into `main`
 | Project | ID | Used by | Rules deployed now |
 |---|---|---|---|
 | Staging | `volunteering-39547` (called "volunteering" in the console) | Previews and staging. Test data only. | Open |
-| Production | `spark-volunteering-prod` | The live site | **Open (temporary)** |
+| Production | `spark-volunteering-prod` | The live site | **Open (temporary)**, restricted rules ready to deploy |
 
 Console: https://console.firebase.google.com
 
@@ -65,7 +65,8 @@ To merge into `main`, a PR needs: the `check` and `proof` jobs to pass, **one ap
 
 | Command | Deploys | To |
 |---|---|---|
-| `npm run rules:deploy` | **Strict** `firestore.rules` | Production |
+| `npm run rules:deploy:restricted` | **Restricted** `firestore.restricted.rules` | Production (the interim rules for development) |
+| `npm run rules:deploy` | **Strict** `firestore.rules` | Production (the launch rules) |
 | `npm run rules:deploy:dev` | **Open** `firestore.dev.rules` | Staging |
 | `firebase deploy --only firestore:rules --config firebase.dev.json --project production` | **Open** rules | Production (this is how it was set to open) |
 
@@ -110,7 +111,7 @@ gh auth login               # GitHub CLI (optional)
 
 ### Before real users arrive
 
-- [ ] **Lock production down:** `npm run rules:deploy` (strict rules). Then test the main flows on the live site, because anything that only worked under the open rules will break. Fix by extending `firestore.rules`, with a test.
+- [ ] **Stop using the open rules on production:** `npm run rules:deploy:restricted` right away, then `npm run rules:deploy` (strict) before launch. Then test the main flows on the live site, because anything that only worked under the open rules will break. Fix by extending `firestore.rules`, with a test.
 - [ ] Clear test data from production (Firebase console) or start a fresh project.
 - [ ] Turn on and test email verification and password reset with real inboxes (Team 1).
 - [ ] Add every domain that sends users through email links to Firebase > Authentication > Settings > **Authorized domains**. Firebase doesn't accept wildcards, so a custom domain is easier than adding every preview address.

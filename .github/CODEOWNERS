@@ -4,6 +4,8 @@
 /firestore.dev.rules    @seanjlam97
 /firebase.json          @seanjlam97
 /firebase.dev.json      @seanjlam97
+/firebase.restricted.json @seanjlam97
+/firestore.restricted.rules @seanjlam97
 /.firebaserc            @seanjlam97
 /wrangler.jsonc         @seanjlam97
 /.github/               @seanjlam97
