@@ -6,7 +6,7 @@ Get the app running on your own laptop. Everything here uses **fake data on your
 
 ## Install these tools
 
-You need: **Git**, **Node.js** (version 20.9 or newer; 24 is what the robots use), **Java** (version 21 or newer, needed only for the Firebase emulator), and a code editor like VS Code.
+You need: **Git**, **Node.js** (version 22 or newer; 24 is what the robots use), **Java** (version 21 or newer, needed only for the Firebase emulator), and a code editor like VS Code.
 
 **Mac** (install [Homebrew](https://brew.sh) first if you don't have it):
 
@@ -14,7 +14,14 @@ You need: **Git**, **Node.js** (version 20.9 or newer; 24 is what the robots use
 brew install git node openjdk
 ```
 
-**Windows**: use **WSL** (a Linux inside Windows). Open PowerShell as administrator and run `wsl --install`, restart, then follow the Ubuntu steps below inside the Ubuntu window. The project's commands use Mac/Linux syntax and will not work in plain Windows PowerShell.
+**Windows (PowerShell):**
+
+```powershell
+winget install Git.Git OpenJS.NodeJS.LTS Microsoft.OpenJDK.21
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # lets PowerShell run npm; no admin needed
+```
+
+Then close PowerShell and open a new one so it finds the new tools. If you can't use `winget`, download the installers instead: [Git](https://git-scm.com/download/win), [Node.js LTS](https://nodejs.org) (22 or newer) and [Java 21](https://learn.microsoft.com/java/openjdk/download). If the Java installer asks, tick **Add to PATH**. Use the `npm run ...` commands below as written. If you'd rather use **WSL** (Linux inside Windows), run `wsl --install` in an administrator PowerShell, restart, and follow the Ubuntu steps.
 
 **Ubuntu / WSL:**
 
@@ -119,7 +126,9 @@ Run these from the project folder.
 | `Missing or insufficient permissions` | It's the security rules. See the rules section of the [PR guide](MAKING_A_PULL_REQUEST.md#firebase-and-the-security-rules). Check the emulator log at http://localhost:4000 or the terminal running `dev:local`: it names the rule that said no. |
 | "Confirm this account has role: staff" | Your account is a student. Locally run `npm run make-staff -- your@email`. On staging use a seeded staff account. |
 | `Unable to locate a Java Runtime` or the emulators won't start | Install Java 21+ (above). Open a new terminal afterwards. |
-| `Port 8080 is not open` or `port taken` | An old emulator is still running. Close other terminals running `dev:local`, or run `lsof -ti tcp:8080 tcp:9099 tcp:3000 \| xargs kill`. |
+| `Port 8080 is not open` or `port taken` | An old emulator is still running. Close other terminals running `dev:local`, or run `lsof -ti tcp:8080 tcp:9099 tcp:3000 \| xargs kill` (Mac/Linux) or `Get-NetTCPConnection -State Listen -LocalPort 8080,9099,3000 \| % { Stop-Process -Id $_.OwningProcess -Force }` (PowerShell). |
+| PowerShell: `running scripts is disabled on this system` | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, then open a new PowerShell. |
+| Windows: `Terminate batch job (Y/N)?` after `Ctrl+C` | Type `Y`. If your sample data is gone next time, run `npm run seed:emulator` again. |
 | Page is blank or stuck loading | Look at the terminal running the app for red errors, and open the browser console (right-click > Inspect > Console). |
 | Login says the user doesn't exist | The emulator was reset or is empty. Run `npm run seed:emulator` again, or sign up. |
 | `npm run lint` fails | Read the file and line it names. Ask an AI assistant to explain it. |

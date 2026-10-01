@@ -12,7 +12,7 @@ You don't need a Firebase or Cloudflare account. Everything runs on fake data on
 
 ### 1. Install the tools
 
-You need **Git**, **Node.js** (20.9 or newer), **Java** (21 or newer, for the Firebase emulator) and a code editor like VS Code.
+You need **Git**, **Node.js** (22 or newer), **Java** (21 or newer, for the Firebase emulator) and a code editor like VS Code.
 
 **Mac** (install [Homebrew](https://brew.sh) first):
 
@@ -20,7 +20,10 @@ You need **Git**, **Node.js** (20.9 or newer), **Java** (21 or newer, for the Fi
 brew install git node openjdk
 ```
 
-**Windows:** use **WSL**. Open PowerShell as administrator, run `wsl --install`, restart, then follow the Ubuntu steps inside the Ubuntu window. The project's commands don't work in plain PowerShell.
+Follow these extra instructions to connect Git to your GitHub account: https://docs.github.com/en/get-started/git-basics/set-up-git. Basic steps:
+- Download `gh` ([instructions link](https://github.com/cli/cli#installation))
+- Set your git name and email
+- `gh auth login` (stick to http downloads)
 
 **Ubuntu / WSL:**
 
@@ -29,6 +32,17 @@ sudo apt update && sudo apt install -y git openjdk-21-jdk
 curl -fsSL https://fnm.vercel.app/install | bash   # then open a new terminal
 fnm install 24
 ```
+
+**Windows (PowerShell):**
+
+Unless you cannot get WSL to work, we recommend running on WSL instead for your Windows device. Otherwise, run the following:
+
+```powershell
+winget install Git.Git OpenJS.NodeJS.LTS Microsoft.OpenJDK.21
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # lets PowerShell run npm; no admin needed
+```
+
+Then close PowerShell and open a new one. No `winget`? See [SETUP](docs/SETUP.md#install-these-tools) for download links. WSL also works: follow the Ubuntu steps inside it.
 
 Check that each command prints a version number:
 
