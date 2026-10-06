@@ -1,4 +1,4 @@
-# 1. Setup
+# Setup
 
 Get the app running on your own laptop. Everything here uses **fake data on your machine**, so you cannot break anything real.
 
@@ -6,15 +6,27 @@ Get the app running on your own laptop. Everything here uses **fake data on your
 
 ## Install these tools
 
-You need: **Git**, **Node.js** (version 22 or newer; 24 is what the robots use), **Java** (version 21 or newer, needed only for the Firebase emulator), and a code editor like VS Code.
+You need **Git**, **Node.js** (22 or newer), **Java** (21 or newer, for the Firebase emulator) and a code editor like VS Code.
 
-**Mac** (install [Homebrew](https://brew.sh) first if you don't have it):
+**Mac** (install [Homebrew](https://brew.sh) first):
 
 ```bash
 brew install git node openjdk
 ```
 
-**Windows (PowerShell):**
+**Ubuntu / WSL (Windows):**
+
+Note: for WSL, we recommend running the `wsl` command from your terminal/PowerShell, which will open up a new instance of WSL to run on.
+
+```bash
+sudo apt update && sudo apt install -y git openjdk-21-jdk
+curl -fsSL https://fnm.vercel.app/install | bash   # then open a new terminal
+fnm install 24
+```
+
+**PowerShell (Windows):**
+
+Unless you cannot get WSL to work, we recommend running on WSL instead for your Windows device. Otherwise, run the following:
 
 ```powershell
 winget install Git.Git OpenJS.NodeJS.LTS Microsoft.OpenJDK.21
@@ -23,15 +35,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   # lets PowerShell run npm;
 
 Then close PowerShell and open a new one so it finds the new tools. If you can't use `winget`, download the installers instead: [Git](https://git-scm.com/download/win), [Node.js LTS](https://nodejs.org) (22 or newer) and [Java 21](https://learn.microsoft.com/java/openjdk/download). If the Java installer asks, tick **Add to PATH**. Use the `npm run ...` commands below as written. If you'd rather use **WSL** (Linux inside Windows), run `wsl --install` in an administrator PowerShell, restart, and follow the Ubuntu steps.
 
-**Ubuntu / WSL:**
-
-```bash
-sudo apt update && sudo apt install -y git openjdk-21-jdk
-curl -fsSL https://fnm.vercel.app/install | bash   # then open a new terminal
-fnm install 24
-```
-
-Check everything worked. Each command should print a version number:
+Next, check that each command prints a version number:
 
 ```bash
 git --version
@@ -39,15 +43,22 @@ node --version
 java -version
 ```
 
+Finally, follow these instructions to connect **Git** to your GitHub account: https://docs.github.com/en/get-started/git-basics/set-up-git. Basic steps:
+- Download `gh` ([instructions link](https://github.com/cli/cli#installation))
+- Set your git name and email
+- `gh auth login` (stick to http downloads)
+
 ## Get the code
+
+Ask the maintainer to add your GitHub account to the repo first. You need write access to push a branch.
+
+*Note for WSL users: before running the commands below, ensure that your directory is in `/mnt/c/Users/<user>/`. If you are in another directory that doesn't start with this prefix, please run `cd /mnt/c/Users/<user>/` to navigate there. You may run into permission issues otherwise in a different directory.*
 
 ```bash
 git clone https://github.com/Spark-PNW/volunteering_app
 cd volunteering_app
 npm install
 ```
-
-You need write access to the repository to push branches. Ask the maintainer to add your GitHub account.
 
 ## Run the app on your laptop
 
