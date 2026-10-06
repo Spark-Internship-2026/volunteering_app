@@ -10,45 +10,11 @@ This is the only thing you need to do on day 1. You will run the app, then add o
 
 You don't need a Firebase or Cloudflare account. Everything runs on fake data on your laptop.
 
-### 1. Install the tools
+### 1. Setup
 
-You need **Git**, **Node.js** (20.9 or newer), **Java** (21 or newer, for the Firebase emulator) and a code editor like VS Code.
+Follow the detailed instructions in [docs/SETUP.md](docs/SETUP.md) to setup the app locally on your computer.
 
-**Mac** (install [Homebrew](https://brew.sh) first):
-
-```bash
-brew install git node openjdk
-```
-
-**Windows:** use **WSL**. Open PowerShell as administrator, run `wsl --install`, restart, then follow the Ubuntu steps inside the Ubuntu window. The project's commands don't work in plain PowerShell.
-
-**Ubuntu / WSL:**
-
-```bash
-sudo apt update && sudo apt install -y git openjdk-21-jdk
-curl -fsSL https://fnm.vercel.app/install | bash   # then open a new terminal
-fnm install 24
-```
-
-Check that each command prints a version number:
-
-```bash
-git --version
-node --version
-java -version
-```
-
-### 2. Get the code
-
-Ask the maintainer to add your GitHub account to the repo first. You need write access to push a branch.
-
-```bash
-git clone https://github.com/Spark-PNW/volunteering_app
-cd volunteering_app
-npm install
-```
-
-### 3. Get the latest code and make a branch
+### 2. Get the latest code and make a branch
 
 ```bash
 git checkout main
@@ -56,7 +22,7 @@ git pull origin main
 git checkout -b roster/<your-github-username>
 ```
 
-### 4. Add your file
+### 3. Add your file
 
 ```bash
 cp roster/TEMPLATE.md roster/<your-github-username>.md
@@ -64,7 +30,7 @@ cp roster/TEMPLATE.md roster/<your-github-username>.md
 
 Open `roster/<your-github-username>.md` and fill in your name, your GitHub username and a fun fact about yourself. Only add your own file.
 
-### 5. Check your work and run the app
+### 4. Check your work and run the app
 
 ```bash
 npm run lint
@@ -88,7 +54,7 @@ Open http://localhost:3000. The staff account's password is `localdev123`.
 
 Take screenshots with Mac `Cmd + Shift + 4` or Windows `Win + Shift + S`. Each one must show the app at localhost:3000. Press `Ctrl+C` once to stop the app.
 
-### 6. Save and upload
+### 5. Save and upload
 
 ```bash
 git add roster/<your-github-username>.md
@@ -96,7 +62,7 @@ git commit -m "Add <your-github-username> to the roster"
 git push -u origin roster/<your-github-username>
 ```
 
-### 7. Open a pull request
+### 6. Open a pull request
 
 Click **Compare & pull request**. Fill in the template:
 
@@ -104,17 +70,17 @@ Click **Compare & pull request**. Fill in the template:
 - **Proof it works:** both screenshots from step 3. Drag the images into the box.
 - **Firestore changes:** write "none" in each field.
 
-### 8. Watch the checks
+### 7. Watch the checks
 
 **check**, **proof** and **preview** should go green. If one is red, see [What the checks mean](docs/MAKING_A_PULL_REQUEST.md#what-the-checks-mean).
 
-### 9. Review and merge
+### 8. Review and merge
 
 1. Ask a teammate to approve your PR.
 2. If it says "This branch is out-of-date", click **Update branch** and wait for the checks again. This will happen when others merge first. It's normal.
 3. Click **Squash and merge**.
 
-### 10. See it deploy
+### 9. See it deploy
 
 Go to the **Actions** tab and find the **Deploy staging** run for your merge. Wait for the green check. The roster file doesn't change how the site looks, so the proof that it deployed is the green run and your file appearing in `main` under `roster/`.
 

@@ -125,7 +125,7 @@ npm run seed:emulator       # in a second terminal, for sample data
 
 If it works there, it will work on the preview. The table below lists what the restricted rules block. Your PR must also list every new field and who writes it (the template asks), so the maintainer can keep the strict launch rules ready.
 
-To try the strict launch rules instead, run `npm run emulators:strict` in one terminal and `NEXT_PUBLIC_USE_EMULATORS=true npx next dev` in another (your data is kept in `.emulator-data/`).
+To try the strict launch rules instead, run `npm run emulators:strict` in one terminal and `npx cross-env NEXT_PUBLIC_USE_EMULATORS=true next dev` in another (your data is kept in `.emulator-data/`).
 
 ### What the restricted rules block (staging, previews, production)
 
