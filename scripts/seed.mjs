@@ -28,7 +28,7 @@ const PASSWORD = "localdev123";
 function loadEnv() {
   const env = { ...process.env };
   if (existsSync(".env.local")) {
-    for (const line of readFileSync(".env.local", "utf8").split("\n")) {
+    for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
       const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
       if (match && !(match[1] in env)) env[match[1]] = match[2];
     }
