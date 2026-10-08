@@ -77,6 +77,45 @@ export function isOpportunityPast(
   return /^\d{4}-\d{2}-\d{2}$/.test(date) && date < todayDateKey;
 }
 
+// Whole days from today to the event date: 0 is today, negative is in the past.
+// null when either date is not a YYYY-MM-DD key.
+export function daysUntilOpportunity(
+  date: string,
+  todayDateKey = getLocalDateKey(),
+) {
+  const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!dateKeyPattern.test(date) || !dateKeyPattern.test(todayDateKey)) {
+    return null;
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  const [todayYear, todayMonth, todayDay] = todayDateKey.split("-").map(Number);
+
+  // UTC on both sides: a daylight saving change must not turn 7 days into 6.9.
+  const millisPerDay = 24 * 60 * 60 * 1000;
+  const target = Date.UTC(year, month - 1, day);
+  const today = Date.UTC(todayYear, todayMonth - 1, todayDay);
+
+  return Math.round((target - today) / millisPerDay);
+}
+
+// How close an event has to be before it counts as upcoming.
+export const UPCOMING_WINDOW_DAYS = 7;
+
+// True for an event happening today or within the next week. This describes the
+// event itself, so it does not depend on whether anyone has signed up.
+export function isOpportunityUpcoming(
+  date: string,
+  todayDateKey = getLocalDateKey(),
+) {
+  const daysUntil = daysUntilOpportunity(date, todayDateKey);
+
+  return (
+    daysUntil !== null && daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS
+  );
+}
+
 export function signupClosesAtForDate(date: string) {
   const [year, month, day] = date.split("-").map(Number);
 
