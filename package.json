@@ -10,6 +10,7 @@
     "rules:test": "cross-env \"PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH\" firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\"",
     "rules:deploy": "firebase deploy --only firestore:rules --project production",
     "make-staff": "node scripts/make-staff.mjs",
+    "verify-email": "node scripts/verify-email.mjs",
     "emulators": "cross-env \"PATH=/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:$PATH\" firebase emulators:start --config firebase.dev.json --only auth,firestore --import=.emulator-data --export-on-exit",
     "dev:local": "concurrently -k -n emu,next \"npm:emulators\" \"wait-on -t 120000 tcp:127.0.0.1:9099 tcp:127.0.0.1:8080 && cross-env NEXT_PUBLIC_USE_EMULATORS=true next dev\"",
     "build:cf": "opennextjs-cloudflare build",

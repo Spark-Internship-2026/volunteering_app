@@ -117,6 +117,7 @@ Run these from the project folder.
 | `npm run dev:restricted` | Same as `dev:local`, but the emulators enforce the **restricted** rules that staging and production use. Use it to check that your change is allowed. |
 | `npm run seed:emulator` | Adds sample users and events to the emulators (run while they are running; works with either rules) |
 | `npm run make-staff -- you@example.com` | Makes an existing emulator user staff |
+| `npm run verify-email -- you@example.com` | Marks an existing emulator user's email as verified (instead of opening the link) |
 | `npm run emulators:strict` | Emulators with the strict rules (see the PR guide) |
 | `npm run lint` | Checks for code mistakes |
 | `npm run build` | Compiles the app (also checks types) |
@@ -141,6 +142,7 @@ Run these from the project folder.
 | PowerShell: `running scripts is disabled on this system` | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, then open a new PowerShell. |
 | Windows: `Terminate batch job (Y/N)?` after `Ctrl+C` | Type `Y`. If your sample data is gone next time, run `npm run seed:emulator` again. |
 | Page is blank or stuck loading | Look at the terminal running the app for red errors, and open the browser console (right-click > Inspect > Console). |
+| Stuck on "Verify your email" | New accounts must click a verification link. The emulator doesn't send email: copy the link from the `npm run dev:local` terminal (the line starting "To verify the email address"), open it, then click **I've verified it**. Or run `npm run verify-email -- your@email`. Seeded accounts are verified by `npm run seed:emulator`; run it again if they are not. |
 | Login says the user doesn't exist | The emulator was reset or is empty. Run `npm run seed:emulator` again, or sign up. |
 | `npm run lint` fails | Read the file and line it names. Ask an AI assistant to explain it. |
 | PR check is red | Click the red mark on the PR, then **Details**, and read the last lines of the log. |

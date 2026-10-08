@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { sendVerification } from "@/features/accounts/verify-email/send-verification";
 import { auth, db } from "@/lib/firebase";
 
 type AuthMode = "login" | "signup";
@@ -86,11 +87,26 @@ export function AuthForm({ mode }: AuthFormProps) {
           role: "student",
           createdAt: serverTimestamp(),
         });
-      } else {
-        await signInWithEmailAndPassword(auth, trimmedEmail, password);
+
+        try {
+          await sendVerification(credential.user);
+        } catch {
+          // The account exists either way; the verify page has a resend button.
+        }
+
+        router.replace("/verify-email");
+        return;
       }
 
-      router.replace("/dashboard");
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        trimmedEmail,
+        password,
+      );
+
+      router.replace(
+        credential.user.emailVerified ? "/dashboard" : "/verify-email",
+      );
     } catch (caughtError) {
       setError(getFriendlyError(caughtError));
     } finally {
