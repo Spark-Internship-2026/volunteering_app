@@ -21,7 +21,9 @@ if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !usingEmulators && typeof windo
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || (usingEmulators ? "demo-api-key" : "missing-api-key"),
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  // Google/Microsoft popup sign-in refuses to start without an authDomain, even
+  // on the emulator (which ignores the value), so give it a placeholder there.
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || (usingEmulators ? "localhost" : undefined),
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? (usingEmulators ? "volunteering-39547" : undefined),
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,

@@ -4,6 +4,7 @@ import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { type FormEvent, useState } from "react";
 
+import { ThirdPartyLoginButtons } from "@/features/accounts/third-party-login-buttons";
 import { isValidEmail } from "@/features/accounts/signup-page/is-valid-email";
 import { auth } from "@/lib/firebase";
 
@@ -105,6 +106,8 @@ export function InlineLoginCard() {
           {isLoggingIn ? "Signing in" : "Log in"}
         </button>
       </form>
+
+      <ThirdPartyLoginButtons />
     </section>
   );
 }

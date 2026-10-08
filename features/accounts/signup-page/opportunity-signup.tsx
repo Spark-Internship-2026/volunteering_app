@@ -6,6 +6,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import {
+  ensureUserProfile,
+  usesThirdPartyLogin,
+} from "@/features/accounts/third-party-login";
 import { SignedOutSignupView } from "@/features/accounts/signup-page/signed-out-signup-view";
 import { SignedInSignupPanel } from "@/features/student-experience/signed-in-signup-panel";
 import { auth, db } from "@/lib/firebase";
@@ -82,9 +86,21 @@ export function OpportunitySignup({ opportunityId }: OpportunitySignupProps) {
           return;
         }
 
-        const loadedProfile = profileSnapshot.exists()
+        let loadedProfile = profileSnapshot.exists()
           ? (profileSnapshot.data() as UserProfile)
           : null;
+
+        // A first Google/Microsoft sign-in fires this listener before the
+        // button has written the profile, so create it here too.
+        if (!loadedProfile && usesThirdPartyLogin(user)) {
+          await ensureUserProfile(user);
+
+          if (!isMounted) {
+            return;
+          }
+
+          loadedProfile = { role: "student" };
+        }
 
         setProfile(loadedProfile);
 
