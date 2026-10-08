@@ -147,6 +147,18 @@ export function AuthForm({ mode }: AuthFormProps) {
             />
           </label>
 
+          {/* "Forgot password?" is only relevant on the login form */}
+          {!isSignup ? (
+            <div className="text-right">
+              <Link
+                className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                href="/forgot-password"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          ) : null}
+
           {error ? (
             <p
               className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"

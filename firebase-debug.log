@@ -1,0 +1,132 @@
+[debug] [2026-10-08T01:39:16.271Z] ----------------------------------------------------------------------
+[debug] [2026-10-08T01:39:16.277Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\sengk\Documents\spark_vol\volunteering_app\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --config firebase.dev.json --only auth,firestore --import=.emulator-data --export-on-exit
+[debug] [2026-10-08T01:39:16.277Z] CLI Version:   15.32.1
+[debug] [2026-10-08T01:39:16.278Z] Platform:      win32
+[debug] [2026-10-08T01:39:16.278Z] Node Version:  v24.21.0
+[debug] [2026-10-08T01:39:16.278Z] Detected Agent: unknown
+[debug] [2026-10-08T01:39:16.279Z] Time:          Wed Oct 07 2026 18:39:16 GMT-0700 (Pacific Daylight Time)
+[debug] [2026-10-08T01:39:16.279Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-08T01:39:20.648Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] Failed to authenticate, have you run firebase login?
+[warn] !  emulators: You are not currently authenticated so some features may not work correctly. Please run firebase login to authenticate the CLI. 
+[debug] [2026-10-08T01:39:20.746Z] openjdk version "25.0.4.1" 2026-08-18 LTS
+OpenJDK Runtime Environment Microsoft-14951867 (build 25.0.4.1+1-LTS)
+
+[debug] [2026-10-08T01:39:20.746Z] OpenJDK 64-Bit Server VM Microsoft-14951867 (build 25.0.4.1+1-LTS, mixed mode, sharing)
+
+[debug] [2026-10-08T01:39:20.752Z] Parsed Java major version: 25
+[info] i  emulators: Starting emulators: auth, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, firestore"}}
+[debug] [2026-10-08T01:39:20.760Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-10-08T01:39:20.760Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-10-08T01:39:20.760Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-10-08T01:39:20.760Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-10-08T01:39:20.760Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-10-08T01:39:20.763Z] Write emulator hub locator at C:\Users\sengk\AppData\Local\Temp\hub-volunteering-39547.json
+[info] i  firestore: Importing data from C:\Users\sengk\Documents\spark_vol\volunteering_app\.emulator-data\firestore_export\firestore_export.overall_export_metadata {"metadata":{"emulator":{"name":"firestore"},"message":"Importing data from C:\\Users\\sengk\\Documents\\spark_vol\\volunteering_app\\.emulator-data\\firestore_export\\firestore_export.overall_export_metadata"}}
+[debug] [2026-10-08T01:39:20.773Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2026-10-08T01:39:20.773Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2026-10-08T01:39:20.773Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\sengk\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.22.0.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--database-edition","standard","--project_id","volunteering-39547","--seed_from_export","C:\\Users\\sengk\\Documents\\spark_vol\\volunteering_app\\.emulator-data\\firestore_export\\firestore_export.overall_export_metadata","--rules","C:\\Users\\sengk\\Documents\\spark_vol\\volunteering_app\\firestore.dev.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","database-edition","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\sengk\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.22.0.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--database-edition\",\"standard\",\"--project_id\",\"volunteering-39547\",\"--seed_from_export\",\"C:\\\\Users\\\\sengk\\\\Documents\\\\spark_vol\\\\volunteering_app\\\\.emulator-data\\\\firestore_export\\\\firestore_export.overall_export_metadata\",\"--rules\",\"C:\\\\Users\\\\sengk\\\\Documents\\\\spark_vol\\\\volunteering_app\\\\firestore.dev.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"database-edition\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2026-10-08T01:39:21.003Z] WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/C:/Users/sengk/.cache/firebase/emulators/cloud-firestore-emulator-v1.22.0.jar)
+WARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2
+WARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release
+ {"metadata":{"emulator":{"name":"firestore"},"message":"WARNING: A terminally deprecated method in sun.misc.Unsafe has been called\nWARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/C:/Users/sengk/.cache/firebase/emulators/cloud-firestore-emulator-v1.22.0.jar)\nWARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2\nWARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release\r\n"}}
+[debug] [2026-10-08T01:39:21.535Z] Oct 07, 2026 6:39:21 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:21 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\r\nINFO: Started WebSocket server on ws://127.0.0.1:9150\r\n"}}
+[debug] [2026-10-08T01:39:21.574Z] 
+API endpoint: http://127.0.0.1:8080
+Database Edition:  {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://127.0.0.1:8080\nDatabase Edition: "}}
+[debug] [2026-10-08T01:39:21.574Z] STANDARD
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"STANDARD\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\r\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\r\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\r\nDev App Server is now running.\n\r\n"}}
+[info] +  firestore: Firestore Emulator was started in standard edition. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator was started in standard edition."}}
+[info] +  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[info] i  auth: Importing config from C:\Users\sengk\Documents\spark_vol\volunteering_app\.emulator-data\auth_export\config.json {"metadata":{"emulator":{"name":"auth"},"message":"Importing config from C:\\Users\\sengk\\Documents\\spark_vol\\volunteering_app\\.emulator-data\\auth_export\\config.json"}}
+[info] i  auth: Importing accounts from C:\Users\sengk\Documents\spark_vol\volunteering_app\.emulator-data\auth_export\accounts.json {"metadata":{"emulator":{"name":"auth"},"message":"Importing accounts from C:\\Users\\sengk\\Documents\\spark_vol\\volunteering_app\\.emulator-data\\auth_export\\accounts.json"}}
+[debug] [2026-10-08T01:39:28.410Z] Could not find VSCode notification endpoint: TypeError: fetch failed. If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2026-10-08T01:39:35.314Z] Oct 07, 2026 6:39:35 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:35 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[debug] [2026-10-08T01:39:35.976Z] Oct 07, 2026 6:39:35 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:35 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+[debug] [2026-10-08T01:39:37.794Z] Oct 07, 2026 6:39:37 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:37 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[debug] [2026-10-08T01:39:37.863Z] Oct 07, 2026 6:39:37 PM io.netty.channel.DefaultChannelPipeline onUnhandledInboundException
+WARNING: An exceptionCaught() event was fired, and it reached at the tail of the pipeline. It usually means the last handler in the pipeline did not handle the exception.
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:399)
+	at java.base/sun.nio.ch.SocketChannelImpl.implRead(SocketChannelImpl.java:431)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:489)
+	at io.netty.buffer.PooledByteBuf.setBytes(PooledByteBuf.java:255)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1132)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:356)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:156)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:37 PM io.netty.channel.DefaultChannelPipeline onUnhandledInboundException\r\nWARNING: An exceptionCaught() event was fired, and it reached at the tail of the pipeline. It usually means the last handler in the pipeline did not handle the exception.\r\njava.net.SocketException: Connection reset\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:399)\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.implRead(SocketChannelImpl.java:431)\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:489)\r\n\tat io.netty.buffer.PooledByteBuf.setBytes(PooledByteBuf.java:255)\r\n\tat io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1132)\r\n\tat io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:356)\r\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:156)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1474)\r\n\r\n"}}
+[debug] [2026-10-08T01:39:37.863Z] Oct 07, 2026 6:39:37 PM io.netty.channel.DefaultChannelPipeline onUnhandledInboundException
+WARNING: An exceptionCaught() event was fired, and it reached at the tail of the pipeline. It usually means the last handler in the pipeline did not handle the exception.
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:399)
+	at java.base/sun.nio.ch.SocketChannelImpl.implRead(SocketChannelImpl.java:431)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:489)
+	at io.netty.buffer.PooledByteBuf.setBytes(PooledByteBuf.java:255)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1132)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:356)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:156)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 07, 2026 6:39:37 PM io.netty.channel.DefaultChannelPipeline onUnhandledInboundException\r\nWARNING: An exceptionCaught() event was fired, and it reached at the tail of the pipeline. It usually means the last handler in the pipeline did not handle the exception.\r\njava.net.SocketException: Connection reset\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:399)\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.implRead(SocketChannelImpl.java:431)\r\n\tat java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:489)\r\n\tat io.netty.buffer.PooledByteBuf.setBytes(PooledByteBuf.java:255)\r\n\tat io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1132)\r\n\tat io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:356)\r\n\tat io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:156)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732)\r\n\tat io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658)\r\n\tat io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)\r\n\tat io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)\r\n\tat io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)\r\n\tat io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1474)\r\n\r\n"}}
+[info] i  To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=IPg8_k55AYsYYxnjKOHUmsa6C3HCO8LLMehDg7xR9KYWZ0Kgz5fe6D&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE {"metadata":{"emulator":{"name":"auth"},"message":"To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=IPg8_k55AYsYYxnjKOHUmsa6C3HCO8LLMehDg7xR9KYWZ0Kgz5fe6D&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE"}}
+[info] i  To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=5DxMy1Eukay-OOHz2fwE2i01k9LbBX-A-sNwJCbBb-YcR92lYfMm1j&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE {"metadata":{"emulator":{"name":"auth"},"message":"To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=5DxMy1Eukay-OOHz2fwE2i01k9LbBX-A-sNwJCbBb-YcR92lYfMm1j&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE"}}
+[info] i  To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=02AynGitBog74_6FmSPTdYMFl4Kau7rbpsa9NPDn71Q2RwIQB74B-r&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE {"metadata":{"emulator":{"name":"auth"},"message":"To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=02AynGitBog74_6FmSPTdYMFl4Kau7rbpsa9NPDn71Q2RwIQB74B-r&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE"}}
+[info] i  To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=njqNJ-fLwKbjb0IC6_4CdHFOoL52YQEAxIm41OzTY5KXlSv_Jbp_w0&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE {"metadata":{"emulator":{"name":"auth"},"message":"To reset the password for staff-auth@example.com, follow this link: http://127.0.0.1:9099/emulator/action?mode=resetPassword&lang=en&oobCode=njqNJ-fLwKbjb0IC6_4CdHFOoL52YQEAxIm41OzTY5KXlSv_Jbp_w0&apiKey=fake-api-key&newPassword=NEW_PASSWORD_HERE"}}
