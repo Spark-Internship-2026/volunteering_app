@@ -23,7 +23,9 @@ export function CreateOpportunityForm() {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
-  const [hours, setHours] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [capacity, setCapacity] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,20 +34,19 @@ export function CreateOpportunityForm() {
     setError("");
 
     const trimmedTitle = title.trim();
-    const parsedHours = Number(hours);
 
     if (!trimmedTitle) {
       setError("Enter a title.");
       return;
     }
 
-    if (!hours || Number.isNaN(parsedHours) || parsedHours <= 0) {
-      setError("Enter the number of service hours.");
+    if (!date) {
+      setError("Choose a date.");
       return;
     }
 
-    if (!date) {
-      setError("Choose a date.");
+    if (startTime >= endTime) {
+      setError("Start time must be before end time.");
       return;
     }
 
@@ -70,8 +71,10 @@ export function CreateOpportunityForm() {
         title: trimmedTitle,
         description: description.trim(),
         location: location.trim(),
-        hours: parsedHours,
+        startTime,
+        endTime,
         date,
+        capacity: parseInt(capacity) || null,
         wrapUpSummary: "",
         videoUrl: "",
         createdBy: user.uid,
@@ -123,28 +126,54 @@ export function CreateOpportunityForm() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-medium">
-                Date
+                Start Time
                 <input
                   className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                  type="date"
-                  value={date}
-                  onChange={(event) => setDate(event.target.value)}
+                  min="0.25"
+                  step="60"
+                  type="time"
+                  value={startTime}
+                  onChange={(event) => setStartTime(event.target.value)}
                   required
                 />
               </label>
 
               <label className="block text-sm font-medium">
-                Hours
+                End Time
                 <input
                   className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   min="0.25"
-                  step="0.25"
-                  type="number"
-                  value={hours}
-                  onChange={(event) => setHours(event.target.value)}
+                  step="60"
+                  type="time"
+                  value={endTime}
+                  onChange={(event) => setEndTime(event.target.value)}
                   required
                 />
               </label>
+            </div>
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium">
+              Date
+              <input
+                className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+                required
+              />
+            </label>
+
+            <label className="block text-sm font-medium">
+              Capacity
+              <input
+                className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                type="number"
+                value={capacity}
+                onChange={(event) => setCapacity(event.target.value)}
+                required
+              />
+            </label>
             </div>
 
             <label className="block text-sm font-medium">
