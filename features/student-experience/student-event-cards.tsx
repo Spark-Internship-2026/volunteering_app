@@ -3,6 +3,10 @@
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import {
+  EventBadge,
+  SignupStatusBadge,
+} from "@/features/student-experience/signup-status-badge";
+import {
   signupButtonClass,
   signupButtonLabel,
 } from "@/features/student-experience/signup-button";
@@ -11,6 +15,7 @@ import {
   formatOpportunityDate,
   type Opportunity,
 } from "@/lib/opportunities";
+import type { SignupStage } from "@/lib/signups";
 
 function handleOpenDetailsKeyDown(
   event: ReactKeyboardEvent<HTMLDivElement>,
@@ -25,6 +30,8 @@ function handleOpenDetailsKeyDown(
 type ActiveEventCardProps = {
   opportunity: Opportunity;
   isSignedUp: boolean;
+  signupStage: SignupStage;
+  isUpcoming: boolean;
   isSubmitting: boolean;
   isRemoving: boolean;
   onOpenDetails: () => void;
@@ -35,6 +42,8 @@ type ActiveEventCardProps = {
 export function ActiveEventCard({
   opportunity,
   isSignedUp,
+  signupStage,
+  isUpcoming,
   isSubmitting,
   isRemoving,
   onOpenDetails,
@@ -50,7 +59,11 @@ export function ActiveEventCard({
           role="button"
           tabIndex={0}
         >
-          <h3 className="text-base font-semibold">{opportunity.title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold">{opportunity.title}</h3>
+            <SignupStatusBadge stage={signupStage} />
+            {isUpcoming ? <EventBadge tone="upcoming" /> : null}
+          </div>
           <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
             <div>
               <dt className="sr-only">Date</dt>
@@ -94,6 +107,7 @@ export function ActiveEventCard({
 type PastEventCardProps = {
   opportunity: Opportunity;
   isSignedUp: boolean;
+  signupStage: SignupStage;
   onOpenDetails: () => void;
 };
 
@@ -101,6 +115,7 @@ type PastEventCardProps = {
 export function PastEventCard({
   opportunity,
   isSignedUp,
+  signupStage,
   onOpenDetails,
 }: PastEventCardProps) {
   return (
@@ -113,7 +128,14 @@ export function PastEventCard({
           role="button"
           tabIndex={0}
         >
-          <h3 className="text-base font-semibold">{opportunity.title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold">{opportunity.title}</h3>
+            {/* An event the student never joined is simply not their business now,
+                so a finished one says nothing rather than "Not signed up". */}
+            {signupStage === "not_signed_up" ? null : (
+              <SignupStatusBadge stage={signupStage} />
+            )}
+          </div>
           <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-600">
             <div>
               <dt className="sr-only">Date</dt>

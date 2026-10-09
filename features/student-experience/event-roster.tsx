@@ -2,14 +2,23 @@
 
 import {
   collection,
+  doc,
   onSnapshot,
   query,
+  serverTimestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 
 import { db } from "@/lib/firebase";
 import type { Opportunity } from "@/lib/opportunities";
+import {
+  SIGNUP_STATUSES,
+  signupStageLabel,
+  signupStatusFromData,
+  type SignupStatus,
+} from "@/lib/signups";
 
 type Signup = {
   id: string;
@@ -17,6 +26,7 @@ type Signup = {
   studentName: string;
   studentEmail: string;
   createdAtMillis: number;
+  status: SignupStatus;
 };
 
 type SignupSortMode = "recent" | "name-asc" | "name-desc";
@@ -105,6 +115,7 @@ function signupFromData(id: string, data: Record<string, unknown>): Signup {
         ? data.studentEmail
         : "No email on signup",
     createdAtMillis: timestampToMillis(data.createdAt),
+    status: signupStatusFromData(data.status),
   };
 }
 
@@ -116,6 +127,7 @@ export function EventRoster({ opportunity, onLoadError }: EventRosterProps) {
   const [signupSearch, setSignupSearch] = useState("");
   const [signupSortMode, setSignupSortMode] =
     useState<SignupSortMode>("recent");
+  const [savingSignupId, setSavingSignupId] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -177,15 +189,34 @@ export function EventRoster({ opportunity, onLoadError }: EventRosterProps) {
     });
   }, [signups, signupSearch, signupSortMode]);
 
+  // Staff only: the rules reject a status change from anyone else. The onSnapshot
+  // above brings the saved value back, so there is no local echo here.
+  async function handleSetStatus(signup: Signup, status: SignupStatus) {
+    setSavingSignupId(signup.id);
+
+    try {
+      await updateDoc(doc(db, "signups", signup.id), {
+        status,
+        ...(status === "checked_in" ? { checkedInAt: serverTimestamp() } : {}),
+        ...(status === "completed" ? { completedAt: serverTimestamp() } : {}),
+      });
+    } catch (caughtError) {
+      onLoadError(caughtError);
+    } finally {
+      setSavingSignupId("");
+    }
+  }
+
   function handleExportCsv() {
     const rows = [
-      ["Event Title", "Date", "Hours", "Student Name", "Student Email"],
+      ["Event Title", "Date", "Hours", "Student Name", "Student Email", "Status"],
       ...visibleSignups.map((signup) => [
         opportunity.title,
         opportunity.date,
         opportunity.hours,
         signup.studentName,
         signup.studentEmail,
+        signupStageLabel(signup.status),
       ]),
     ];
     const csv = rows
@@ -275,6 +306,7 @@ export function EventRoster({ opportunity, onLoadError }: EventRosterProps) {
                     <th className="whitespace-nowrap px-3 py-2 font-medium">
                       Signed up
                     </th>
+                    <th className="px-3 py-2 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
@@ -286,6 +318,29 @@ export function EventRoster({ opportunity, onLoadError }: EventRosterProps) {
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-zinc-600">
                         {formatSignupTime(signup.createdAtMillis)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2">
+                        <label className="sr-only" htmlFor={`status-${signup.id}`}>
+                          Status for {signup.studentName}
+                        </label>
+                        <select
+                          className="h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                          disabled={savingSignupId === signup.id}
+                          id={`status-${signup.id}`}
+                          value={signup.status}
+                          onChange={(event) =>
+                            handleSetStatus(
+                              signup,
+                              event.target.value as SignupStatus,
+                            )
+                          }
+                        >
+                          {SIGNUP_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {signupStageLabel(status)}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                     </tr>
                   ))}

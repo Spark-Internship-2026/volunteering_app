@@ -24,11 +24,18 @@ import { db } from "@/lib/firebase";
 import {
   getLocalDateKey,
   isOpportunityPast,
+  isOpportunityUpcoming,
   opportunityFromData,
   sortOpportunitiesByDate,
   type Opportunity,
 } from "@/lib/opportunities";
-import { normalizeSignupEmail, signupDocIdForEmail } from "@/lib/signups";
+import {
+  normalizeSignupEmail,
+  signupDocIdForEmail,
+  signupStageFor,
+  signupStatusFromData,
+  type SignupStatus,
+} from "@/lib/signups";
 import type { UserProfile } from "@/shared/types";
 
 type StudentOpportunitiesListProps = {
@@ -78,9 +85,8 @@ export function StudentOpportunitiesList({
   profile,
 }: StudentOpportunitiesListProps) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [signedUpOpportunityIds, setSignedUpOpportunityIds] = useState<
-    Set<string>
-  >(new Set());
+  const [signupStatusByOpportunityId, setSignupStatusByOpportunityId] =
+    useState<Map<string, SignupStatus>>(new Map());
   const [signupDocIdsByOpportunityId, setSignupDocIdsByOpportunityId] =
     useState<Map<string, string>>(new Map());
   const [submittingOpportunityId, setSubmittingOpportunityId] = useState("");
@@ -117,21 +123,25 @@ export function StudentOpportunitiesList({
             opportunityFromData(opportunityDoc.id, opportunityDoc.data()),
           ),
         );
-        const loadedSignupIds = new Set<string>();
+        const loadedStatuses = new Map<string, SignupStatus>();
         const loadedSignupDocIdsByOpportunityId = new Map<string, string>();
 
         signupSnapshot.docs.forEach((signupDoc) => {
-          const opportunityId = signupDoc.data().opportunityId;
+          const signupData = signupDoc.data();
+          const opportunityId = signupData.opportunityId;
 
           if (typeof opportunityId === "string") {
-            loadedSignupIds.add(opportunityId);
+            loadedStatuses.set(
+              opportunityId,
+              signupStatusFromData(signupData.status),
+            );
             loadedSignupDocIdsByOpportunityId.set(opportunityId, signupDoc.id);
           }
         });
 
         if (isMounted) {
           setOpportunities(loadedOpportunities);
-          setSignedUpOpportunityIds(loadedSignupIds);
+          setSignupStatusByOpportunityId(loadedStatuses);
           setSignupDocIdsByOpportunityId(loadedSignupDocIdsByOpportunityId);
         }
       } catch (caughtError) {
@@ -217,10 +227,12 @@ export function StudentOpportunitiesList({
         createdAt: serverTimestamp(),
       });
 
-      setSignedUpOpportunityIds((currentIds) => {
-        const nextIds = new Set(currentIds);
-        nextIds.add(opportunity.id);
-        return nextIds;
+      // `status` is deliberately not written: the rules only let staff set it, and a
+      // new signup reads as "signed_up" by default.
+      setSignupStatusByOpportunityId((currentStatuses) => {
+        const nextStatuses = new Map(currentStatuses);
+        nextStatuses.set(opportunity.id, "signed_up");
+        return nextStatuses;
       });
       setSignupDocIdsByOpportunityId((currentDocIds) => {
         const nextDocIds = new Map(currentDocIds);
@@ -263,10 +275,10 @@ export function StudentOpportunitiesList({
     try {
       await deleteDoc(doc(db, "signups", signupDocId));
 
-      setSignedUpOpportunityIds((currentIds) => {
-        const nextIds = new Set(currentIds);
-        nextIds.delete(opportunity.id);
-        return nextIds;
+      setSignupStatusByOpportunityId((currentStatuses) => {
+        const nextStatuses = new Map(currentStatuses);
+        nextStatuses.delete(opportunity.id);
+        return nextStatuses;
       });
       setSignupDocIdsByOpportunityId((currentDocIds) => {
         const nextDocIds = new Map(currentDocIds);
@@ -290,7 +302,7 @@ export function StudentOpportunitiesList({
   }
 
   const signedUpOpportunities = opportunities.filter((opportunity) =>
-    signedUpOpportunityIds.has(opportunity.id),
+    signupStatusByOpportunityId.has(opportunity.id),
   );
   const activeOpportunities = opportunities.filter(
     (opportunity) => !isOpportunityPast(opportunity.date, todayDateKey),
@@ -340,17 +352,25 @@ export function StudentOpportunitiesList({
 
       <div className="mt-4 space-y-3">
         {activeOpportunities.map((opportunity) => {
-          const isSignedUp = signedUpOpportunityIds.has(opportunity.id);
+          const signupStatus = signupStatusByOpportunityId.get(opportunity.id);
 
           return (
             <ActiveEventCard
               isRemoving={removingOpportunityId === opportunity.id}
-              isSignedUp={isSignedUp}
+              isSignedUp={Boolean(signupStatus)}
               isSubmitting={submittingOpportunityId === opportunity.id}
+              isUpcoming={isOpportunityUpcoming(opportunity.date, todayDateKey)}
               key={opportunity.id}
               onOpenDetails={() => setSelectedOpportunityId(opportunity.id)}
-              onToggleSignup={() => toggleSignup(opportunity, isSignedUp)}
+              onToggleSignup={() =>
+                toggleSignup(opportunity, Boolean(signupStatus))
+              }
               opportunity={opportunity}
+              signupStage={signupStageFor(
+                signupStatus,
+                opportunity.date,
+                todayDateKey,
+              )}
             />
           );
         })}
@@ -367,10 +387,15 @@ export function StudentOpportunitiesList({
       <div className="mt-4 space-y-3">
         {pastOpportunities.map((opportunity) => (
           <PastEventCard
-            isSignedUp={signedUpOpportunityIds.has(opportunity.id)}
+            isSignedUp={signupStatusByOpportunityId.has(opportunity.id)}
             key={opportunity.id}
             onOpenDetails={() => setSelectedOpportunityId(opportunity.id)}
             opportunity={opportunity}
+            signupStage={signupStageFor(
+              signupStatusByOpportunityId.get(opportunity.id),
+              opportunity.date,
+              todayDateKey,
+            )}
           />
         ))}
       </div>
@@ -379,13 +404,13 @@ export function StudentOpportunitiesList({
         <StudentEventModal
           isPast={isOpportunityPast(selectedOpportunity.date, todayDateKey)}
           isRemoving={selectedOpportunity.id === removingOpportunityId}
-          isSignedUp={signedUpOpportunityIds.has(selectedOpportunity.id)}
+          isSignedUp={signupStatusByOpportunityId.has(selectedOpportunity.id)}
           isSubmitting={selectedOpportunity.id === submittingOpportunityId}
           onClose={() => setSelectedOpportunityId("")}
           onToggleSignup={() =>
             toggleSignup(
               selectedOpportunity,
-              signedUpOpportunityIds.has(selectedOpportunity.id),
+              signupStatusByOpportunityId.has(selectedOpportunity.id),
             )
           }
           opportunity={selectedOpportunity}
