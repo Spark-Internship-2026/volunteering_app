@@ -54,6 +54,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,18 +134,27 @@ export function AuthForm({ mode }: AuthFormProps) {
               required
             />
           </label>
-
           <label className="block text-sm font-medium">
             Password
-            <input
-              className="mt-1 block h-11 w-full rounded-md border border-zinc-300 px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-              autoComplete={isSignup ? "new-password" : "current-password"}
-              minLength={6}
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+            <div className="relative mt-1">
+              <input
+                className="block h-11 w-full rounded-md border border-zinc-300 px-3 pr-10 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                minLength={6}
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-zinc-500 hover:text-zinc-800"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </label>
 
           {error ? (
