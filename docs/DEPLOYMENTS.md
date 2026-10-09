@@ -106,7 +106,7 @@ gh auth login               # GitHub CLI (optional)
 ### Making a staff user
 
 - **Emulator:** `npm run make-staff -- email`
-- **Staging:** four staff accounts exist (`staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@example.com`, password `localdev123`). They keep working under the restricted rules. To add more staff, change a user's `role` in the Firebase console (the script `npm run seed:staff` only works while staging runs the open rules).
+- **Staging:** four staff accounts exist (`staff-auth@`, `staff-student@`, `staff-events@`, `staff-staff@example.com`, password `localdev123`). They keep working under the restricted rules. Every account must verify its email before it can use the app, and `example.com` can't receive email, so the maintainer marks these four verified once: `ACCESS_TOKEN=$(gcloud auth print-access-token) npm run verify-email -- staff-auth@example.com --cloud` (repeat for each). Test accounts you sign up on a preview need a real inbox. To add more staff, change a user's `role` in the Firebase console (the script `npm run seed:staff` only works while staging runs the open rules).
 - **Production:** sign up in the app, then in the Firebase console open Firestore > `users` > the person's document and change `role` to `staff`. There is no in-app way yet (an invite code or admin page would be a good feature).
 
 ### Before real users arrive

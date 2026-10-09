@@ -44,12 +44,12 @@ In a second terminal, add the sample accounts:
 npm run seed:emulator
 ```
 
-Run `seed:emulator` once. The emulator starts empty, so the sample accounts don't exist until you do, and they come back on later runs because your data is saved.
+Run `seed:emulator` once. The emulator starts empty, so the sample accounts don't exist until you do, and they come back on later runs because your data is saved. It also marks the sample accounts' emails as verified, so if they get stuck on "Verify your email", run it again.
 
 Open http://localhost:3000. The staff account's password is `localdev123`.
 
 1. **Staff creates an event.** Log in as `staff-events@example.com`, click **Events**, then create a new event. Use your GitHub username in the title (for example `[yourname] Test event`) and pick a date in the future, since signups close once an event has passed.
-2. **Student signs up.** Log out, click **Sign up** to make your own student account (use your own name, any email like `you@example.com`, and any password), find your event and click **Sign up** on it. Take **screenshot 1**: the student view showing you are signed up.
+2. **Student signs up.** Log out, click **Sign up** to make your own student account (use your own name, any email like `you@example.com`, and any password). New accounts must verify their email. The emulator doesn't send real email, so find the line starting "To verify the email address" in the `npm run dev:local` terminal, open that link, then click **I've verified it**. Then find your event and click **Sign up** on it. Take **screenshot 1**: the student view showing you are signed up.
 3. **Staff sees the signup.** Log out, log back in as `staff-events@example.com`, and open your event from **Events**. Take **screenshot 2**: the event page showing your student account's name in the roster.
 
 Take screenshots with Mac `Cmd + Shift + 4` or Windows `Win + Shift + S`. Each one must show the app at localhost:3000. Press `Ctrl+C` once to stop the app.

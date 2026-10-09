@@ -31,6 +31,11 @@ export function StaffGate({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (!user.emailVerified) {
+        router.replace("/verify-email");
+        return;
+      }
+
       try {
         const snapshot = await getDoc(doc(db, "users", user.uid));
         const role = snapshot.exists() ? snapshot.data().role : null;

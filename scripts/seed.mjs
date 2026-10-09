@@ -115,6 +115,20 @@ const dateFromToday = (days) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+// Emulator only: mark the account's email as verified so it gets past the
+// verify-email page. Uses the Auth emulator's admin access, like writeDoc.
+async function markEmailVerified(uid) {
+  const response = await fetch(
+    `http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:update`,
+    {
+      method: "POST",
+      headers: { Authorization: "Bearer owner", "Content-Type": "application/json" },
+      body: JSON.stringify({ localId: uid, emailVerified: true }),
+    },
+  );
+  if (!response.ok) throw new Error(`Could not verify ${uid}: ${await response.text()}`);
+}
+
 async function ensureUser(user) {
   let credential;
   try {
@@ -129,6 +143,7 @@ async function ensureUser(user) {
     role: user.role,
     createdAt: ts(new Date()),
   });
+  if (useEmulator) await markEmailVerified(credential.user.uid);
   return credential.user.uid;
 }
 
