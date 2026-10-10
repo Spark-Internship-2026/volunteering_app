@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ThirdPartyLoginButtons } from "@/features/accounts/third-party-login-buttons";
 import { auth, db } from "@/lib/firebase";
 
 type AuthMode = "login" | "signup";
@@ -178,6 +179,8 @@ export function AuthForm({ mode }: AuthFormProps) {
                 : "Log in"}
           </button>
         </form>
+
+        <ThirdPartyLoginButtons onSignedIn={() => router.replace("/dashboard")} />
 
         <p className="mt-5 text-center text-sm text-zinc-600">
           {isSignup ? "Already have an account?" : "Need an account?"}{" "}
